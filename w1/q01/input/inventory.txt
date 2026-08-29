@@ -1,0 +1,7 @@
+/run.log	96
+/docs/.secret.txt	7
+/docs/notes one.txt	11
+/work/<25020007076>/docs/.secret.txt	7
+/work/<25020007076>/docs/notes one.txt	11
+/work/<25020007076>/tmp/empty.txt	0
+/tmp/empty.txt	0
