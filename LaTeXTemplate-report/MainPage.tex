@@ -3,6 +3,53 @@
 \usepackage{graphicx}
 \graphicspath{{images/}}
 \usepackage{ctex}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{amsmath}
+
+% 代码样式
+\lstset{
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{gray!5},
+    frame=single,
+    framesep=4pt,
+    rulecolor=\color{gray!40},
+    breaklines=true,
+    breakatwhitespace=false,
+    showstringspaces=false,
+    columns=fullflexible,
+    keepspaces=true,
+    language=bash,
+    keywordstyle=\color{blue!70!black},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red!60!black},
+    morekeywords={echo, cd, ls, pwd, cat, grep, sed, awk, find, sort, uniq, head, tail, wc, curl, jq, xargs, mkdir, chmod, cp, printf, test, which, man, date, stress, kill, source, export, alias, exit},
+    morekeywords=[2]{if, then, else, fi, for, while, do, done, in, set, function},
+    keywordstyle=[2]{\color{purple!70!black}},
+}
+
+% 内联代码 - 使用 xspace 和特殊处理来避免特殊字符问题
+\usepackage{xspace}
+\newcommand{\codetext}[1]{\texttt{\detokenize{#1}}\xspace}
+% 为了兼容性，将 \code 定义为 \codetext
+\let\code\codetext
+
+% 题目环境
+\newcounter{exercisenum}
+\newenvironment{exercise}[1]{
+    \refstepcounter{exercisenum}
+    \subsection*{题\theexercisenum：#1}
+    \addcontentsline{toc}{subsection}{题\theexercisenum：\protect#1}
+}{
+    \vspace{0.5em}
+    \hrule
+    \vspace{1em}
+}
 
 % Document Variables (Title, Author, etc.)
 \input{Variables/Variables}
@@ -50,7 +97,7 @@
 \pagenumbering{arabic}
 
 % Chapters
-\include{Chapters/01-课堂实验及结果}
+\include{Chapters/01-课堂练习及结果}
 \include{Chapters/02-课后练习内容和结果}
 \include{Chapters/03-解题感悟}
 
@@ -59,7 +106,7 @@
 % \printbibliography
 
 % Annexes: Work that *YOU DID NOT* developed
-\input{Chapters/Annexes/00-AnnexA}
+% \input{Chapters/Annexes/00-AnnexA}
 
 % Back Page
 \input{Matter/08-BPage}

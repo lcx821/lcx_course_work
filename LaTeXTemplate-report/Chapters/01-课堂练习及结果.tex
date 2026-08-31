@@ -7,7 +7,7 @@
 
 首先，如图\ref{fig:make_dirs}所示，创建 input/docs 和 input/tmp；
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-29 19.14.49.png}
     \caption{创建 input/docs 和 input/tmp}
@@ -17,7 +17,7 @@
 如图\ref{fig:创建文件}所示，使用vim编辑器创建 input/docs/notes one.txt（内容为 alpha 和 beta 两行）、
 input/docs/.secret.txt（内容为 hidden）、input/tmp/empty.txt（空文件）
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-29 19.15.21.png}
     \caption{创建 input/docs/notes one.txt、input/docs/.secret.txt、input/tmp/empty.txt}
@@ -26,7 +26,7 @@ input/docs/.secret.txt（内容为 hidden）、input/tmp/empty.txt（空文件�
 
 如图\ref{fig:执行脚本}所示，先使用vim编辑器创建空的run.log，然后使用date > run.log和date >> run.log命令将当前日期分两行写入 run.log，最后使用cat run.log命令查看 run.log 的内容。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-29 19.16.12.png}
     \caption{执行脚本}
@@ -35,7 +35,7 @@ input/docs/.secret.txt（内容为 hidden）、input/tmp/empty.txt（空文件�
 
 如图\ref{fig:绝对路径}所示，使用pwd路径显示q01的绝对路径。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-29 19.16.46.png}
     \caption{绝对路径}
@@ -44,7 +44,7 @@ input/docs/.secret.txt（内容为 hidden）、input/tmp/empty.txt（空文件�
 
 如图\ref{fig:列出项目}所示，先用find命令找出 input 目录下的所有项目，然后对于每个找到的项目使用ls命令列出其详细信息。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-29 19.17.34.png}
     \caption{列出项目}
@@ -54,20 +54,20 @@ input/docs/.secret.txt（内容为 hidden）、input/tmp/empty.txt（空文件�
 在图\ref{fig:列出项目}中，find为查找命令，“."表示查找当前目录，-type f表示查找的为文件，-exec表示对每个找到的项目执行后面的命令，{}表示当前找到的项目，\;表示-exec命令的结束。
 而在exec后的ls为列出命令，-l为长格式选项，-a为显示所有文件选项，会显示隐藏文件。
 
-如图\ref{fig:复制文件}所示，利用管道将find和while结合起来，递归遍历当前目录下所有`.txt`文件，在work/<25020007076>/目录里完整复刻原有的文件夹结构，把全部 txt 文件复制过去。
+如图\ref{fig:复制文件}所示，利用管道将find和while结合起来，递归遍历当前目录下所有`.txt`文件，在 \verb|work/<25020007076>| 目录里完整复刻原有的文件夹结构，把全部 txt 文件复制过去。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-29 22.21.54.png}
     \caption{复制文件}
     \label{fig:复制文件}
 \end{figure}
 
-在图\ref{fig:复制文件}中，IFS表示关闭字符串分割，防止文件名包含空格、制表符被拆分，read -r file表示读取每一行的文件名，while read -r file; do ... done表示对每个读取到的文件名执行do和done之间的命令，mkdir -p表示创建目录，dirname "$file"表示获取文件所在的目录，cp "$file" "work/<25020007076>/$file"表示将文件复制到目标目录。
+在图\ref{fig:复制文件}中，IFS表示关闭字符串分割，防止文件名包含空格、制表符被拆分，read -r file表示读取每一行的文件名，while read -r file; do ... done表示对每个读取到的文件名执行do和done之间的命令，mkdir -p表示创建目录，dirname \$file表示获取文件所在的目录，cp \$file \verb|work/<25020007076>/$file| 表示将文件复制到目标目录。
 
 如图\ref{fig:设置权限}所示，将复制后的目录权限设为 750、普通文件权限设为 640；生成 inventory.txt，列出相对路径和字节数。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-29 22.28.11.png}
     \caption{设置权限}
@@ -78,18 +78,18 @@ input/docs/.secret.txt（内容为 hidden）、input/tmp/empty.txt（空文件�
 
 如图\ref{fig:查看结果}所示，使用cat命令查看 inventory.txt 文件的内容。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-29 22.28.25.png}
     \caption{查看结果}
     \label{fig:查看结果}
 \end{figure}
 
-subsection{实验结果}
+\subsection{实验结果}
 
-github的commit记录和push记录如图\ref{fig:github记录1}所示。
+第一题的github的commit记录和push记录分别如图\ref{fig:github记录1}所示。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-29 22.31.42.png}
     \caption{github记录1}
@@ -102,14 +102,14 @@ github的commit记录和push记录如图\ref{fig:github记录1}所示。
 
 如图\ref{fig:输入csv记录}所示，使用vim编辑器创建access.csv文件，并输入如图\ref{fig:csv内容}所示的内容。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-30 11.00.39.png}
     \caption{输入csv记录}
     \label{fig:输入csv记录}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-30 10.44.20.png}
     \caption{csv内容}
@@ -118,18 +118,18 @@ github的commit记录和push记录如图\ref{fig:github记录1}所示。
 
 如图\ref{fig:analyze.sh}所示，使用vim编辑器编写 analyze.sh，并用cat命令查看 analyze.sh 
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-30 11.00.53.png}
     \caption{analyze.sh}
     \label{fig:analyze.sh}
 \end{figure}
 
-在图\ref{fig:analyze.sh}中，先判断传入的地址是否存在，如果不存在则将错误写入 stderr 并返回非零退出码。其中[ ! -f "$1" ]为判断条件。>&2将错误消息输出到标准错误stderr。
-在输入“HTTP 5xx 数量最多的前 2 个 path:”的提示后，使用awk解析 CSV，跳过表头，统计状态码 5xx 的各 path 出错次数，按计数降序排序后取前 2 条输出。
-在输入"平均 latency_ms: "的提示后，awk 跳过 CSV 表头，累加延迟字段并统计行数，计算得到保留两位小数的平均延迟并打印。
+在图\ref{fig:analyze.sh}中，先判断传入的地址是否存在，如果不存在则将错误写入 stderr 并返回非零退出码。其中 [ ! -f \verb|"$1"| ] 为判断条件。\verb|>&2| 将错误消息输出到标准错误 stderr。
+在输入“HTTP 5xx 数量最多的前 2 个 path:”的提示后，使用 awk 解析 CSV，跳过表头，统计状态码 5xx 的各 path 出错次数，按计数降序排序后取前 2 条输出。
+在输入“平均 \texttt{latency\_ms:} ”的提示后，awk 跳过 CSV 表头，累加延迟字段并统计行数，计算得到保留两位小数的平均延迟并打印。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-30 11.01.13.png}
     \caption{使用chmod命令为analyze.sh添加执行权限}
@@ -138,25 +138,25 @@ github的commit记录和push记录如图\ref{fig:github记录1}所示。
 
 如图\ref{fig:添加analyze.sh权限}所示，使用chmod命令为analyze.sh添加执行权限。然后如图\ref{fig:执行analyze.sh}所示，分别对 access.csv 和一个不存在的文件运行脚本analyze.sh，并查看输出结果。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-30 11.01.27.png}
     \caption{执行analyze.sh}
     \label{fig:执行analyze.sh}
 \end{figure}  
 
-subsection{实验结果}
+\subsection{实验结果}
 
 第二题的github的commit记录和push记录分别如图\ref{fig:github记录2}与图\ref{fig:github记录3}所示。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-30 11.01.54.png}
     \caption{github记录2}
     \label{fig:github记录2}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-30 11.02.04.png}
     \caption{github记录3}
@@ -169,7 +169,7 @@ subsection{实验结果}
 
 如图\ref{fig:初始化仓库}所示，使用git init命令初始化一个新的Git仓库。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.27.04.png}
     \caption{初始化仓库}
@@ -178,7 +178,7 @@ subsection{实验结果}
 
 如图\ref{fig:创建config}所示，创建config文件并输入内容mode=normal。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.36.09.png}
     \caption{创建config}
@@ -187,16 +187,16 @@ subsection{实验结果}
 
 如图\ref{fig:提交config}所示，完成初次提交。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.36.19.png}
+    \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.36.09.png}
     \caption{提交config文件}
     \label{fig:提交config文件}
 \end{figure}
 
 如图\ref{fig:创建feature-a分支}所示，创建feature-a分支。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.38.07.png}
     \caption{创建feature-a分支}
@@ -205,16 +205,16 @@ subsection{实验结果}
 
 如图\ref{fig:提交feature-a分支}所示，将config文件的内容内容改为 mode=safe 并提交。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.38.17.png}
+    \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.38.07.png}
     \caption{提交feature-a分支}
     \label{fig:提交feature-a分支}
 \end{figure}
 
 如图\ref{fig:创建feature-b分支}所示，先切换回main分支，在main分支上创建feature-b分支。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.40.32.png}
     \caption{创建feature-b分支}
@@ -223,7 +223,7 @@ subsection{实验结果}
 
 如图\ref{fig:提交feature-b分支}所示，将config文件的内容改为 mode=fast 并提交。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.42.08.png}
     \caption{提交feature-b分支}
@@ -232,7 +232,7 @@ subsection{实验结果}
 
 如图\ref{fig:合并feature-a分支}所示，切换回main分支，尝试将feature-a分支合并到main分支。从图\ref{fig:合并feature-a分支}可以看出，没有出现合并错误，成功合并了feature-a分支。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.43.25.png}
     \caption{合并feature-a分支}
@@ -240,14 +240,14 @@ subsection{实验结果}
 \end{figure}
 
 从图\ref{fig:合并feature-b分支}可以看出，尝试将feature-b分支合并到main分支时，从git status的输出中可以看出出现了合并冲突。
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.43.53.png}
     \caption{合并feature-b分支}
     \label{fig:合并feature-b分支}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.44.15.png}
     \caption{查看合并冲突}
@@ -258,14 +258,14 @@ subsection{实验结果}
 
 如图\ref{fig:解决合并冲突}所示，解决冲突时保留 mode=safe，并另加一行 note=reviewed。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.44.43.png}
     \caption{解决合并冲突}
     \label{fig:解决合并冲突}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.45.11.png}
     \caption{提交解决冲突后的config文件}
@@ -276,7 +276,7 @@ subsection{实验结果}
 
 如图\ref{fig:查看提交记录}所示，确认工作区干净，运行 git log --all --graph --decorate --oneline 查看历史。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 08.47.40.png}
     \caption{查看提交记录}
@@ -287,28 +287,28 @@ subsection{实验结果}
 
 如图\ref{fig:github记录4}所示，第三题的github commit记录和push记录。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 09.24.35.png}
     \caption{github记录4}
     \label{fig:github记录4}
 \end{figure}
 
-section{第 4 题 修复并构建一页技术说明}
+\section{第 4 题 修复并构建一页技术说明}
 
 \subsection{实验内容}
 
 如图\ref{fig:创建report.tex文件}所示，使用vim编辑器创建report.tex文件，并补全report.tex文件的内容。再如图\ref{fig:查看report.tex文件}所示，使用cat命令查看report.tex文件的内容。
 因使用题目要求的latexmk -pdf -halt-on-error无法编译中文，所以report.tex文件的内容使用英文表示。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-30 16.35.21.png}
     \caption{创建report.tex文件}
     \label{fig:创建report.tex文件}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-31 09.29.39.png}
     \caption{查看report.tex文件}
@@ -317,14 +317,14 @@ section{第 4 题 修复并构建一页技术说明}
 
 如图\ref{fig:1使用latexmk编译report.tex文件}和图\ref{fig:2使用latexmk编译report.tex文件}所示，使用latexmk编译report.tex文件，并生成 report.pdf。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-30 16.36.05.png}
     \caption{使用latexmk编译report.tex文件}
     \label{fig:1使用latexmk编译report.tex文件}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-30 16.37.26.png}
     \caption{使用latexmk编译report.tex文件}
@@ -335,7 +335,7 @@ section{第 4 题 修复并构建一页技术说明}
 
 如图\ref{fig:github记录5}所示，第四题的github commit记录和push记录。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{截屏2026-08-30 16.37.53.png}
     \caption{github记录5}
@@ -344,5 +344,6 @@ section{第 4 题 修复并构建一页技术说明}
 
 \section{Github仓库地址}
 
-本次课程的报告、练习、代码等，均已上传至个人github仓库。\\Github仓库地址：https://github.com/lcx821/lcx_course_work
-\\其中，q03练习所用仓库也已上传至Github.\\仓库地址：https://github.com/lcx821/q03
+本次课程的报告、练习、代码等，均已上传至个人github仓库。\\Github仓库地址：\url{https://github.com/lcx821/lcx_course_work}
+
+其中，q03练习所用仓库也已上传至Github。\\仓库地址：\url{https://github.com/lcx821/q03}
