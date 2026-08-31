@@ -105,13 +105,8 @@
 % \usepackage[utf8]{inputenc} % Required for international characters
 \usepackage[T1]{fontenc} % Font encoding for international characters
 
-%\setCJKmainfont{SimSun}
-%\setCJKsansfont{SimHei}
-%\setCJKmonofont{KaiTi}
-%\setCJKfamilyfont{zhsong}{SimSun}
-%\setCJKfamilyfont{zhhei}{SimHei}
-%\setCJKfamilyfont{zhkai}{KaiTi}
-%\setCJKfamilyfont{zhfs}{FangSong}
+% Chinese defaults are already provided by ctex for this environment.
+% Avoid re-defining CJK families here to prevent redundant xeCJK warnings.
 
 % \usepackage{newpxtext} % Alternative use of the PX fonts
 \usepackage{newpxmath} % Alternative use of the PX fonts (Math)
@@ -122,7 +117,7 @@
 
 % Ensure compilation with XeLaTeX or LuaLaTeX for fontspec
 \usepackage{fontspec}
-\setmainfont{TeX Gyre Pagella}[LetterSpace=0.7]
+\setmainfont{Lato}[LetterSpace=0.7]
 
 % Define a command to switch to Lato font
 \newcommand{\latofont}{\fontspec{Lato}}
@@ -305,11 +300,11 @@
 % Chapters & Sections
 \usepackage{titlesec}
 \titleformat{\chapter}[display]
-{\flushright\normalsize\huge\color{black}\CJKfontspec{STZhongsong}}%
+{\flushright\normalsize\huge\color{black}\CJKfontspec{Songti SC}}%
 {\flushright\normalsize%
 {\fontsize{25}{25}\selectfont\hspace*{-1em}\rule[-2pt]{.1pt}{30pt}\hspace{0.5em}\raisebox{4.5pt}{\thechapter}}}%
 {10pt}%
-{\addfontfeature{LetterSpace=6}\huge\scshape}%
+{\addfontfeature{LetterSpace=6}\huge}%
 
 % Abstract Keywords
 \NewDocumentCommand{\keywordsen}{m}{

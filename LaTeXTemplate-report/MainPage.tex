@@ -1,5 +1,8 @@
  % Packages & Document Configurations
 \documentclass[zh]{ThesisTemplate}
+\usepackage{graphicx}
+\graphicspath{{images/}}
+\usepackage{ctex}
 
 % Document Variables (Title, Author, etc.)
 \input{Variables/Variables}
@@ -25,9 +28,11 @@
 %\include{Matter/03-Acknowledgements}
 
 % Abstract
+% TODO: 若要加入摘要，请取消下一行注释，并在 Chapters/00-Abstract.tex 中填写内容
 % \include{Chapters/00-Abstract}
 
 % List of contents, figures, and tables
+% TODO: 目录会自动生成；若你还没写正文，先保留此项即可
 \tableofcontents
 %\plainblankpage
 %\listoffigures
