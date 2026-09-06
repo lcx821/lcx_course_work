@@ -76,6 +76,7 @@
 \usepackage{eso-pic} % For the background in both front and back matter
 \usepackage{setspace} % For line height adjusts
 \usepackage{varwidth} % Dependency for the custom boxes
+\PassOptionsToPackage{fontset=fandol}{ctex}
 \usepackage{ctex} % 添加中文支持
 
 % Load more libaries from tcolorbox package
