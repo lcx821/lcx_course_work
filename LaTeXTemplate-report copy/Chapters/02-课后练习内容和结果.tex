@@ -1,0 +1,865 @@
+\chapter{课后练习内容和结果}
+\label{cp:shell-practice}
+
+\section{基础命令与重定向}
+
+\begin{exercise}{确认 Shell 环境}
+\textbf{要求}：本课程要求使用类 Unix Shell（Bash 或 ZSH）。运行 \code{echo \$SHELL} 确认。
+
+\textbf{解答}：
+\begin{lstlisting}
+echo $SHELL
+\end{lstlisting}
+
+\textbf{实际输出}：
+\begin{lstlisting}
+/bin/zsh
+\end{lstlisting}
+
+\textbf{说明}：当前默认 Shell 是 zsh，属于类 Unix Shell，符合课程要求。bash 也可用（版本 3.2.57）。Windows 用户需使用 WSL 或 Linux 虚拟机，不能用 \code{cmd.exe} 或 PowerShell。
+\end{exercise}
+
+\begin{exercise}{\code{ls -l} 的输出格式}
+\textbf{要求}：\code{ls -l} 的 \code{-l} 选项作用是什么？运行 \code{ls -l /}，每一行最前面的 10 个字符分别代表什么？
+
+\textbf{解答}：
+\begin{lstlisting}
+ls -l /
+\end{lstlisting}
+
+\textbf{实际输出（节选）}：
+\begin{lstlisting}
+total 10
+drwxrwxr-x  42 root  admin  1344 Aug 30 13:55 Applications
+drwxr-xr-x@ 39 root  wheel  1248 Apr  6 16:10 bin
+lrwxr-xr-x@  1 root  wheel    11 Apr  6 16:10 etc -> private/etc
+\end{lstlisting}
+
+\textbf{\code{-l} 选项作用}：以长格式（long format）列出文件，显示文件类型、权限、硬链接数、所有者、所属组、大小、修改时间和文件名。
+
+\textbf{前 10 个字符的含义}：
+
+\begin{table}[h]
+\centering
+\begin{tabular}{c|l|l}
+\toprule
+\textbf{位置} & \textbf{含义} & \textbf{示例} \\
+\midrule
+第1位 & 文件类型 & \code{d}=目录, \code{l}=符号链接, \code{-}=普通文件 \\
+第2-4位 & 所有者（user）权限 & \code{rwx} = 读、写、执行 \\
+第5-7位 & 所属组（group）权限 & \code{r-x} = 读、执行（无写权限） \\
+第8-10位 & 其他用户（others）权限 & \code{r-x} = 读、执行 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+例如 \code{drwxr-xr-x} 表示：这是一个目录，所有者可读写执行，组用户可读执行，其他用户可读执行。
+
+\noindent\textit{注：第11位可能是 \code{@}（macOS 扩展属性）或 \code{+}（ACL），不属于权限位。}
+\end{exercise}
+
+\begin{exercise}{glob 模式匹配}
+\textbf{要求}：什么是 glob？测试 \code{ls *.txt}、\code{ls file?.txt}、\code{ls \{a,b,c\}.txt} 等模式。
+
+\textbf{glob 是什么}：glob 是 Shell 提供的\textbf{文件名通配符模式匹配}机制。Shell 在执行命令前，会先将包含通配符的参数展开为匹配的文件名列表，再传给程序。
+
+\begin{table}[h]
+\centering
+\begin{tabular}{c|l}
+\toprule
+\textbf{模式} & \textbf{含义} \\
+\midrule
+\code{*} & 匹配任意长度的任意字符（包括空） \\
+\code{?} & 匹配恰好一个任意字符 \\
+\code{[abc]} & 匹配 a、b、c 中任意一个字符 \\
+\code{[a-z]} & 匹配 a 到 z 范围内任意一个字符 \\
+\code{\{a,b,c\}} & 大括号扩展，生成 a、b、c 多个字符串 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{实际测试}：
+\begin{lstlisting}
+mkdir glob_test && cd glob_test
+touch file1.txt file2.txt file3.txt a.txt b.txt c.txt abc.txt ab.txt
+
+ls *.txt        # 匹配所有 .txt 文件
+ls file?.txt    # 匹配 file + 任意一个字符 + .txt
+ls {a,b,c}.txt  # 大括号扩展为 a.txt b.txt c.txt
+ls [ab]*.txt    # 匹配以 a 或 b 开头的 .txt 文件
+\end{lstlisting}
+
+\textbf{输出}：
+\begin{lstlisting}
+=== ls *.txt ===
+a.txt  ab.txt  abc.txt  b.txt  c.txt  file1.txt  file2.txt  file3.txt
+
+=== ls file?.txt ===
+file1.txt  file2.txt  file3.txt
+
+=== ls {a,b,c}.txt ===
+a.txt  b.txt  c.txt
+
+=== ls [ab]*.txt ===
+a.txt  ab.txt  abc.txt  b.txt
+\end{lstlisting}
+\end{exercise}
+
+\begin{exercise}{三种引号的区别}
+\textbf{要求}：\code{'单引号'}、\code{"双引号"} 和 \code{\$'ANSI 引号'} 有什么区别？写一条命令，输出同时包含字面量 \code{\$}、\code{!} 和换行符的字符串。
+
+\begin{table}[h]
+\centering
+\begin{tabular}{c|c|c|c|l}
+\toprule
+\textbf{引号类型} & \textbf{变量展开} & \textbf{转义序列} & \textbf{历史扩展} & \textbf{适用场景} \\
+\midrule
+\code{'...'} 单引号 & 否 & 否 & 否 & 纯字面量字符串 \\
+\code{"..."} 双引号 & 是 & 否（除少数） & 可能触发 & 需要嵌入变量 \\
+\code{\$'...'} ANSI-C & 否 & 是 & 否 & 需要转义序列的字面量 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{实际测试}：
+\begin{lstlisting}
+# 单引号：完全字面量
+echo 'It costs $100! Hello\nWorld'
+# 输出: It costs $100! Hello\nWorld
+
+# 双引号：展开变量，\n 不解释
+price=100
+echo "It costs \$price! Hello\nWorld"
+# 输出: It costs $price! Hello\nWorld
+
+# ANSI-C 引号：解释 \n，$ 是字面量
+echo $'It costs $100! Hello\nWorld'
+# 输出:
+# It costs $100! Hello
+# World
+\end{lstlisting}
+
+\textbf{题目要求的命令}（同时包含字面量 \code{\$}、\code{!} 和换行符）：
+\begin{lstlisting}
+echo $'价格是 $100!\n这是第二行'
+\end{lstlisting}
+
+\textbf{输出}：
+\begin{lstlisting}
+价格是 $100!
+这是第二行
+\end{lstlisting}
+
+\noindent\textit{也可以用 \code{printf '价格是 \$100!\textbackslash n这是第二行\textbackslash n'}，printf 默认就解释转义序列。}
+\end{exercise}
+
+\begin{exercise}{标准流与重定向}
+\textbf{要求}：Shell 有三条标准流：stdin(0)、stdout(1)、stderr(2)。运行 \code{ls /nonexistent /tmp}，把 stdout 和 stderr 分别重定向到两个文件。如何把两者都重定向到同一个文件？
+
+\textbf{三条标准流}：
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{stdin (0)}：标准输入，默认来自键盘
+    \item \textbf{stdout (1)}：标准输出，默认打印到终端
+    \item \textbf{stderr (2)}：标准错误，默认也打印到终端（独立于 stdout）
+\end{itemize}
+
+\textbf{分别重定向到两个文件}：
+\begin{lstlisting}
+ls /nonexistent /tmp > stdout.txt 2> stderr.txt
+\end{lstlisting}
+\begin{itemize}[leftmargin=2em]
+    \item \code{> stdout.txt} 等价于 \code{1> stdout.txt}，把标准输出写入 stdout.txt
+    \item \code{2> stderr.txt} 把标准错误写入 stderr.txt
+\end{itemize}
+
+\textbf{实际输出}：
+\begin{lstlisting}
+stdout.txt: 包含 /tmp 目录下的文件列表
+stderr.txt: 包含 "ls: /nonexistent: No such file or directory"
+\end{lstlisting}
+
+\textbf{两者重定向到同一个文件（两种方法）}：
+
+方法1（POSIX 标准，推荐）：
+\begin{lstlisting}
+ls /nonexistent /tmp > both.txt 2>&1
+\end{lstlisting}
+\begin{itemize}[leftmargin=2em]
+    \item \code{> both.txt} 先把 stdout 指向 both.txt
+    \item \code{2>&1} 把 stderr 重定向到当前 stdout 指向的地方（即 both.txt）
+    \item \textbf{顺序很重要}：\code{2>&1} 必须在 \code{>} 之后
+\end{itemize}
+
+方法2（bash/zsh 简写）：
+\begin{lstlisting}
+ls /nonexistent /tmp &> both.txt
+\end{lstlisting}
+\end{exercise}
+
+\begin{exercise}{退出状态与 \code{\&\&} / \code{||}}
+\textbf{要求}：\code{\$?} 保存上一条命令的退出状态（0=成功）。\code{\&\&} 仅在前一条成功时执行后一条；\code{||} 仅在前一条失败时执行后一条。写一行命令：仅当 \code{/tmp/mydir} 不存在时才创建它。
+
+\textbf{退出状态}：每个命令执行后返回一个 0-255 的整数，0 表示成功，非 0 表示失败。可用 \code{echo \$?} 查看。
+
+\textbf{逻辑运算符}：
+\begin{itemize}[leftmargin=2em]
+    \item \code{cmd1 \&\& cmd2}：cmd1 成功（退出码0）才执行 cmd2
+    \item \code{cmd1 || cmd2}：cmd1 失败（退出码非0）才执行 cmd2
+    \item 两者可组合：\code{cmd1 \&\& cmd2 || cmd3}（类似三元运算符）
+\end{itemize}
+
+\textbf{题目要求的命令}：
+\begin{lstlisting}
+[ -d /tmp/mydir ] || mkdir /tmp/mydir
+\end{lstlisting}
+
+\textbf{解释}：
+\begin{itemize}[leftmargin=2em]
+    \item \code{[ -d /tmp/mydir ]} 测试目录是否存在（\code{test -d} 的简写）
+    \item 如果存在，\code{[} 命令返回 0（成功），\code{||} 后面的 \code{mkdir} 不执行
+    \item 如果不存在，\code{[} 返回非 0（失败），\code{||} 触发 \code{mkdir /tmp/mydir}
+\end{itemize}
+
+\textbf{实际验证}：
+\begin{lstlisting}
+# 第一次运行：目录不存在，创建成功
+[ -d /tmp/mydir ] || mkdir /tmp/mydir
+ls -ld /tmp/mydir
+# 输出: drwxr-xr-x  2 liuchenxi  wheel  64 Aug 30 16:51 /tmp/mydir
+
+# 第二次运行：目录已存在，不重复创建
+[ -d /tmp/mydir ] || mkdir /tmp/mydir
+# 无输出，无报错
+\end{lstlisting}
+
+\noindent\textit{更简洁的等价写法：\code{mkdir -p /tmp/mydir}（\code{-p} 表示目录已存在时不报错），但题目要求用 \code{\&\&}/\code{||} 逻辑。}
+\end{exercise}
+
+\section{脚本编写与权限}
+
+\begin{exercise}{为什么 \code{cd} 必须是 Shell 内建命令？}
+\textbf{要求}：为什么 \code{cd} 必须是 Shell 内建命令，而不能是独立程序？（提示：想想子进程能影响和不能影响父进程的哪些状态。）
+
+\textbf{核心原因}：子进程无法修改父进程的工作目录。
+
+\textbf{详细解释}：
+
+\begin{enumerate}[leftmargin=2em]
+    \item \textbf{进程独立性}：在 Unix 系统中，每个进程都有自己独立的「当前工作目录」（cwd）。当 Shell 执行一个外部程序时，会通过 \code{fork()} 创建子进程，再用 \code{exec()} 加载程序。子进程继承父进程的 cwd，但这只是一个\textbf{副本}。
+
+    \item \textbf{如果 cd 是独立程序}：
+    \begin{itemize}[leftmargin=1.5em]
+        \item Shell fork 出子进程
+        \item 子进程执行 \code{cd /some/path}，修改的是\textbf{子进程自己}的 cwd
+        \item 子进程结束后，Shell（父进程）的 cwd \textbf{完全没有改变}
+        \item 结果就是：你执行了 \code{cd /some/path}，但提示符显示的当前目录没变
+    \end{itemize}
+
+    \item \textbf{内建命令的优势}：内建命令由 Shell 自身执行，不创建子进程，可以直接修改 Shell 进程自己的 cwd，从而真正改变后续命令的工作目录。
+\end{enumerate}
+
+\textbf{验证}：
+\begin{lstlisting}
+which cd
+# 输出: cd: shell built-in command（或 no cd in $PATH）
+# 说明 cd 不是独立程序，而是 Shell 内建命令
+\end{lstlisting}
+
+\textbf{同类内建命令}：\code{cd}、\code{export}、\code{alias}、\code{exit}、\code{source}/\code{.} 等——凡是需要修改 Shell 自身状态的命令，都必须是内建命令。
+\end{exercise}
+
+\begin{exercise}{写脚本检查文件是否存在}
+\textbf{要求}：写一个脚本，接收文件名参数（\code{\$1}），用 \code{test -f} 或 \code{[ -f ... ]} 检查该文件是否存在，并根据结果输出不同提示。
+
+\textbf{脚本 \code{check.sh}}：
+\begin{lstlisting}
+#!/bin/bash
+# 检查文件是否存在的脚本
+
+if [ -f "$1" ]; then
+    echo "文件 '$1' 存在。"
+else
+    echo "文件 '$1' 不存在。"
+fi
+\end{lstlisting}
+
+\textbf{关键点}：
+\begin{itemize}[leftmargin=2em]
+    \item \code{\$1} 是第一个命令行参数
+    \item \code{[ -f "\$1" ]} 测试 \code{\$1} 是否为存在的\textbf{普通文件}（\code{-f} = file）
+    \item \code{"\$1"} 加双引号防止文件名含空格时出错
+    \item \code{if ...; then ... else ... fi} 是 bash 条件语句结构
+\end{itemize}
+
+\textbf{其他常用测试条件}：
+\begin{table}[h]
+\centering
+\begin{tabular}{c|l}
+\toprule
+\textbf{条件} & \textbf{含义} \\
+\midrule
+\code{-f file} & 存在且是普通文件 \\
+\code{-d file} & 存在且是目录 \\
+\code{-e file} & 存在（任何类型） \\
+\code{-r file} & 存在且可读 \\
+\code{-w file} & 存在且可写 \\
+\code{-x file} & 存在且可执行 \\
+\code{-s file} & 存在且大小大于0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{exercise}
+
+\begin{exercise}{\code{chmod +x} 的作用}
+\textbf{要求}：把上一题的脚本保存为 \code{check.sh}。先运行 \code{./check.sh somefile}，会发生什么？然后执行 \code{chmod +x check.sh} 再试一次。为什么这一步是必须的？
+
+\textbf{chmod 前运行}：
+\begin{lstlisting}
+./check.sh somefile
+# 输出: bash: ./check.sh: Permission denied
+\end{lstlisting}
+
+\textbf{chmod 前的权限}：
+\begin{lstlisting}
+-rw-------  1 liuchenxi  staff  147 Aug 30 16:52 check.sh
+\end{lstlisting}
+\code{rw-} = 所有者可读、可写，但\textbf{不可执行}
+
+\textbf{执行 \code{chmod +x check.sh} 后}：
+\begin{lstlisting}
+-rwx--x--x  1 liuchenxi  staff  147 Aug 30 16:52 check.sh
+\end{lstlisting}
+\code{rwx} = 所有者可读、可写、可执行
+
+\textbf{chmod 后运行}：
+\begin{lstlisting}
+./check.sh somefile
+# 输出: 文件 'somefile' 不存在。
+
+./check.sh check.sh
+# 输出: 文件 'check.sh' 存在。
+\end{lstlisting}
+
+\textbf{为什么必须 \code{chmod +x}}：
+\begin{itemize}[leftmargin=2em]
+    \item Unix 系统中，文件能否被直接执行取决于\textbf{可执行权限位}（x 位），而不是文件扩展名
+    \item 新建文件默认没有执行权限（安全考虑）
+    \item \code{chmod +x} 给所有用户添加执行权限，Shell 才能通过 \code{./check.sh} 直接运行它
+    \item 没有执行权限时，仍可通过解释器显式运行：\code{bash check.sh somefile}
+\end{itemize}
+
+\noindent\textit{shebang 行（\code{\#!/bin/bash}）只在文件有执行权限且被直接运行时才生效。}
+\end{exercise}
+
+\begin{exercise}{\code{set -x} 的作用}
+\textbf{要求}：在脚本的 \code{set} 选项里加入 \code{-x} 会发生什么？写个简单脚本试试。
+
+\textbf{\code{set -x} 的作用}：开启\textbf{调试模式}（xtrace）。Shell 在执行每条命令前，会先把该命令及其展开后的参数打印到 stderr（通常以 \code{+} 开头），方便追踪脚本执行流程。
+
+\textbf{演示脚本 \code{debug\_demo.sh}}：
+\begin{lstlisting}
+#!/bin/bash
+set -x
+
+echo "开始执行脚本"
+name="Shell"
+echo "你好，$name"
+for i in 1 2 3; do
+    echo "第 $i 次循环"
+done
+echo "脚本结束"
+\end{lstlisting}
+
+\textbf{运行输出}（\code{+} 开头的行是 set -x 打印的追踪信息）：
+\begin{lstlisting}
++ echo '开始执行脚本'
+开始执行脚本
++ name=Shell
++ echo '你好，Shell'
+你好，Shell
++ i=1
++ echo '第 1 次循环'
+第 1 次循环
++ i=2
++ echo '第 2 次循环'
+第 2 次循环
++ i=3
++ echo '第 3 次循环'
+第 3 次循环
++ echo '脚本结束'
+脚本结束
+\end{lstlisting}
+
+\textbf{常用 set 选项总结}：
+\begin{table}[h]
+\centering
+\begin{tabular}{c|l}
+\toprule
+\textbf{选项} & \textbf{作用} \\
+\midrule
+\code{set -e} & 任何命令失败时立即退出脚本 \\
+\code{set -u} & 使用未定义变量时报错（而非当作空字符串） \\
+\code{set -o pipefail} & 管道中任一命令失败，整个管道视为失败 \\
+\code{set -x} & 打印每条执行的命令（调试用） \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{推荐组合}：\code{set -euo pipefail}（脚本开头的「严格模式」），调试时再加 \code{-x}。
+\end{exercise}
+
+\begin{exercise}{带日期的备份文件}
+\textbf{要求}：写一条命令，把文件复制为带当天日期的备份文件名（例如 \code{notes.txt} $\rightarrow$ \code{notes\_2026-01-12.txt}）。提示：\code{\$(date +\%Y-\%m-\%d)}
+
+\textbf{命令}：
+\begin{lstlisting}
+cp notes.txt "notes_$(date +%Y-%m-%d).txt"
+\end{lstlisting}
+
+\textbf{原理}：
+\begin{itemize}[leftmargin=2em]
+    \item \code{\$(date +\%Y-\%m-\%d)} 是\textbf{命令替换}：执行 \code{date} 命令，用其输出替换整个 \code{\$()}
+    \item \code{+\%Y-\%m-\%d} 是 date 的格式参数：\code{\%Y}=四位年, \code{\%m}=两位月, \code{\%d}=两位日
+    \item 双引号确保日期展开后作为一个整体参数
+\end{itemize}
+
+\textbf{实际运行}：
+\begin{lstlisting}
+echo "这是笔记内容" > notes.txt
+cp notes.txt "notes_$(date +%Y-%m-%d).txt"
+ls -l notes*.txt
+\end{lstlisting}
+
+\textbf{输出}：
+\begin{lstlisting}
+-rw-r--r--  1 staff  19 Aug 30 16:52 notes.txt
+-rw-r--r--  1 staff  19 Aug 30 16:52 notes_2026-08-30.txt
+\end{lstlisting}
+
+\textbf{通用公式}：
+\begin{lstlisting}
+cp "文件名" "文件名_$(date +%Y-%m-%d).扩展名"
+\end{lstlisting}
+
+\textbf{其他常用日期格式}：
+\begin{lstlisting}
+date +%Y%m%d                  # 20260830
+date +%Y-%m-%d_%H%M%S         # 2026-08-30_165200（带时间）
+date -v-1d +%Y-%m-%d          # 昨天的日期（macOS）
+\end{lstlisting}
+\end{exercise}
+
+\begin{exercise}{修改 flaky test 脚本接收命令行参数}
+\textbf{要求}：修改讲义中的「复现偶尔才会失败的测试」脚本，使它能够从命令行参数接收测试命令，而不是写死 \code{cargo test my\_test}。提示：\code{\$1} 或 \code{\$@}
+
+\textbf{修改后的脚本 \code{flaky\_test.sh}}：
+\begin{lstlisting}
+#!/bin/bash
+set -euo pipefail
+
+# 从命令行参数接收测试命令，而不是写死
+TEST_CMD="$@"
+
+if [ -z "$TEST_CMD" ]; then
+    echo "用法: $0 <测试命令>"
+    echo "示例: $0 cargo test my_test"
+    exit 1
+fi
+
+# Start CPU stress in background
+stress --cpu 8 &
+STRESS_PID=$!
+
+# Setup log file
+LOGFILE="test_runs_$(date +%s).log"
+echo "Logging to $LOGFILE"
+echo "运行测试命令: $TEST_CMD"
+
+# Run tests until one fails
+RUN=1
+while $TEST_CMD > "$LOGFILE" 2>&1; do
+    echo "Run $RUN passed"
+    ((RUN++))
+done
+
+# Cleanup and report
+kill $STRESS_PID
+echo "Test failed on run $RUN"
+echo "Last 20 lines of output:"
+tail -n 20 "$LOGFILE"
+echo "Full log: $LOGFILE"
+\end{lstlisting}
+
+\textbf{关键改动}：
+\begin{itemize}[leftmargin=2em]
+    \item 原脚本写死：\code{while cargo test my\_test > "\$LOGFILE" 2>\&1; do}
+    \item 改为：\code{TEST\_CMD="\$@"} 接收所有命令行参数，然后 \code{while \$TEST\_CMD > ...}
+\end{itemize}
+
+\textbf{特殊参数说明}：
+\begin{table}[h]
+\centering
+\begin{tabular}{c|l}
+\toprule
+\textbf{参数} & \textbf{含义} \\
+\midrule
+\code{\$1} & 第一个参数 \\
+\code{\$@} & 所有参数，每个参数独立（加引号后 \code{"\$@"} 保留空格） \\
+\code{\$*} & 所有参数，用 IFS 连接成一个字符串 \\
+\code{\$#} & 参数个数 \\
+\code{\$0} & 脚本自身名称 \\
+\code{\$!} & 最近一个后台进程的 PID \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{使用方式}：
+\begin{lstlisting}
+./flaky_test.sh cargo test my_test     # 传 cargo test 命令
+./flaky_test.sh pytest tests/           # 传 pytest 命令
+./flaky_test.sh false                   # 用 false 测试（第一次就失败）
+\end{lstlisting}
+
+\noindent\textit{注意：\code{\$@} 比 \code{\$1} 更适合接收完整命令，因为命令可能包含多个参数（如 \code{cargo test my\_test} 是三个参数）。}
+\end{exercise}
+
+\section{管道、工具与进阶}
+
+\begin{exercise}{找出 home 目录最常见的 5 种文件扩展名}
+\textbf{要求}：使用管道找出 home 目录中最常见的 5 种文件扩展名。提示：组合 \code{find}、\code{grep}/\code{sed}/\code{awk}、\code{sort}、\code{uniq -c}、\code{head}
+
+\textbf{命令}：
+\begin{lstlisting}
+find ~ -type f 2>/dev/null \
+  | grep -oE '\.[^./]+$' \
+  | sort \
+  | uniq -c \
+  | sort -rn \
+  | head -n 5
+\end{lstlisting}
+
+\textbf{逐步拆解}：
+\begin{enumerate}[leftmargin=2em]
+    \item \code{find ~ -type f}：递归列出 home 目录下所有普通文件
+    \item \code{2>/dev/null}：把权限错误等 stderr 丢弃
+    \item \code{grep -oE '\textbackslash .[\^{}./]+\$'}：提取每行末尾的扩展名
+    \begin{itemize}[leftmargin=1.5em]
+        \item \code{-o}：只输出匹配部分
+        \item \code{-E}：使用扩展正则
+        \item \code{\textbackslash .[\^{}./]+\$}：匹配 \code{.} + 一个或多个非\code{.}非\code{/}字符 + 行尾
+    \end{itemize}
+    \item \code{sort}：排序（相同扩展名排在一起）
+    \item \code{uniq -c}：去重并统计每行出现次数
+    \item \code{sort -rn}：按数字逆序排序（出现次数多的在前）
+    \item \code{head -n 5}：取前 5 个
+\end{enumerate}
+
+\textbf{实际输出}：
+\begin{lstlisting}
+11425 .py
+ 9438 .js
+ 6911 .pyc
+ 5855 .md
+ 3948 .json
+\end{lstlisting}
+
+\textbf{等价的 awk 版本}：
+\begin{lstlisting}
+find ~ -type f 2>/dev/null | awk -F. '{print "."$NF}' | sort | uniq -c | sort -rn | head -5
+\end{lstlisting}
+\end{exercise}
+
+\begin{exercise}{\code{xargs} 结合 \code{find} 统计 \code{.sh} 文件行数}
+\textbf{要求}：\code{xargs} 把 stdin 的每一行转换为命令参数。结合 \code{find} 和 \code{xargs}（不要用 \code{find -exec}），找出目录中所有 \code{.sh} 文件，并用 \code{wc -l} 统计每个文件行数。加分项：正确处理文件名中的空格。提示：\code{-print0} 和 \code{-0}
+
+\textbf{基础版本}：
+\begin{lstlisting}
+find . -name "*.sh" | xargs wc -l
+\end{lstlisting}
+
+\textbf{问题}：如果文件名包含空格（如 \code{my script.sh}），xargs 会把它拆成两个参数 \code{my} 和 \code{script.sh}，导致错误。
+
+\textbf{正确处理空格的版本（加分项）}：
+\begin{lstlisting}
+find . -name "*.sh" -print0 | xargs -0 wc -l
+\end{lstlisting}
+
+\textbf{原理}：
+\begin{itemize}[leftmargin=2em]
+    \item \code{find -print0}：用\textbf{null 字符（\textbackslash0）}分隔文件名，而不是换行符
+    \item \code{xargs -0}：以 null 字符作为分隔符读取输入
+    \item 因为文件名中不可能包含 null 字符，所以这种方式\textbf{100\% 安全}处理任何文件名（含空格、换行、特殊字符）
+\end{itemize}
+
+\textbf{实际输出}：
+\begin{lstlisting}
+      1 ./dir with spaces/my script.sh
+     34 ./flaky_test.sh
+      8 ./check.sh
+     10 ./debug_demo.sh
+     53 total
+\end{lstlisting}
+
+\textbf{xargs 常用参数}：
+\begin{table}[h]
+\centering
+\begin{tabular}{c|l}
+\toprule
+\textbf{参数} & \textbf{含义} \\
+\midrule
+\code{-0} & 以 null 字符分隔输入（配合 find -print0） \\
+\code{-n N} & 每次传递 N 个参数给命令 \\
+\code{-I \{\}} & 用 \code{\{\}} 作为参数占位符 \\
+\code{-P N} & 并行运行 N 个进程 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{exercise}
+
+\begin{exercise}{\code{curl} 获取课程网站 HTML，统计列出了多少讲}
+\textbf{要求}：使用 \code{curl} 获取课程网站的 HTML，通过 \code{grep} 统计列出了多少讲。提示：找出每讲课程名称在 HTML 中的共性；用 \code{curl -s} 关闭进度输出。
+
+\textbf{命令}：
+\begin{lstlisting}
+curl -s https://missing-semester-cn.github.io/2026/ \
+  | grep -oE 'href="/2026/[a-z-]+/"' \
+  | sort -u \
+  | wc -l
+\end{lstlisting}
+
+\textbf{逐步拆解}：
+\begin{enumerate}[leftmargin=2em]
+    \item \code{curl -s URL}：静默模式获取网页 HTML（不显示进度条）
+    \item \code{grep -oE 'href="/2026/[a-z-]+/"'}：提取所有课程链接
+    \begin{itemize}[leftmargin=1.5em]
+        \item 课程链接的共性：\code{href="/2026/课程名/"}
+        \item 课程名由小写字母和连字符组成
+    \end{itemize}
+    \item \code{sort -u}：排序并去重（\code{-u} = unique）
+    \item \code{wc -l}：统计行数，即课程讲数
+\end{enumerate}
+
+\textbf{实际输出}：
+\begin{lstlisting}
+9
+\end{lstlisting}
+
+\textbf{列出各讲名称}：
+\begin{lstlisting}
+curl -s https://missing-semester-cn.github.io/2026/ \
+  | grep -oE 'href="/2026/[a-z-]+/"' \
+  | sort -u \
+  | sed 's|href="/2026/||;s|/"||'
+\end{lstlisting}
+
+\textbf{输出}：
+\begin{lstlisting}
+agentic-coding
+beyond-code
+code-quality
+command-line-environment
+course-shell
+debugging-profiling
+development-environment
+shipping-code
+version-control
+\end{lstlisting}
+
+共 \textbf{9 讲}，与课程介绍中「九场 1 小时的讲座」一致。
+\end{exercise}
+
+\begin{exercise}{\code{jq} 处理 JSON}
+\textbf{要求}：用 curl 获取示例数据，再用 jq 提取 version 大于 6 的人员姓名。提示：先 \code{jq .} 看结构；再试 \code{jq '.[] | select(...) | .name'}
+
+\textbf{获取数据并查看结构}：
+\begin{lstlisting}
+curl -s https://microsoftedge.github.io/Demos/json-dummy-data/64KB.json > data.json
+jq '.[0]' data.json
+\end{lstlisting}
+
+\textbf{JSON 结构}：
+\begin{lstlisting}
+{
+  "name": "Adeel Solangi",
+  "language": "Sindhi",
+  "id": "V59OF92YF627HFY0",
+  "bio": "Donec lobortis eleifend...",
+  "version": 6.1
+}
+\end{lstlisting}
+顶层是一个数组，每个元素包含 name、language、id、bio、version 字段。
+
+\textbf{提取 version > 6 的人员姓名}：
+\begin{lstlisting}
+jq '.[] | select(.version > 6) | .name' data.json
+\end{lstlisting}
+
+\textbf{jq 语法拆解}：
+\begin{itemize}[leftmargin=2em]
+    \item \code{.[]}：遍历数组中的每个元素
+    \item \code{select(.version > 6)}：筛选 version 字段大于 6 的元素
+    \item \code{.name}：提取 name 字段
+\end{itemize}
+
+\textbf{统计数量}：
+\begin{lstlisting}
+jq '[.[] | select(.version > 6)] | length' data.json
+# 输出: 89
+\end{lstlisting}
+
+\textbf{部分输出}：
+\begin{lstlisting}
+"Adeel Solangi"
+"Aamir Solangi"
+"Adil Eli"
+"George Mifsud"
+"John Falzon"
+...
+\end{lstlisting}
+
+\textbf{jq 常用操作速查}：
+\begin{table}[h]
+\centering
+\begin{tabular}{c|l}
+\toprule
+\textbf{表达式} & \textbf{含义} \\
+\midrule
+\code{.} & 整个输入 \\
+\code{.field} & 取字段 \\
+\code{.[]} & 遍历数组 \\
+\code{select(cond)} & 筛选满足条件的元素 \\
+\code{length} & 数组长度或字符串长度 \\
+\code{keys} & 对象的所有键 \\
+\code{map(expr)} & 对数组每个元素应用 expr \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{exercise}
+
+\begin{exercise}{\code{awk} 按列过滤并交换列}
+\textbf{要求}：写一个 awk 命令：只输出第二列大于 100 的行，并交换第一列和第三列。测试数据：\code{printf 'a 50 x\textbackslash nb 150 y\textbackslash nc 200 z\textbackslash n'}
+
+\textbf{命令}：
+\begin{lstlisting}
+printf 'a 50 x\nb 150 y\nc 200 z\n' \
+  | awk '$2 > 100 { temp=$1; $1=$3; $3=temp; print }'
+\end{lstlisting}
+
+\textbf{awk 语法拆解}：
+\begin{itemize}[leftmargin=2em]
+    \item \code{\$2 > 100}：模式（条件），只处理第二列大于 100 的行
+    \item \code{\{ temp=\$1; \$1=\$3; \$3=temp; print \}}：动作
+    \begin{itemize}[leftmargin=1.5em]
+        \item \code{temp=\$1}：把第一列存到临时变量
+        \item \code{\$1=\$3}：第一列替换为第三列的值
+        \item \code{\$3=temp}：第三列替换为原来的第一列
+        \item \code{print}：打印修改后的整行
+    \end{itemize}
+\end{itemize}
+
+\textbf{实际输出}：
+\begin{lstlisting}
+y 150 b
+z 200 c
+\end{lstlisting}
+
+\textbf{验证}：
+\begin{itemize}[leftmargin=2em]
+    \item 原始行 \code{a 50 x}：第二列 50，不大于 100，被过滤
+    \item 原始行 \code{b 150 y}：第二列 150 > 100，交换第一列(b)和第三列(y) $\rightarrow$ \code{y 150 b}
+    \item 原始行 \code{c 200 z}：第二列 200 > 100，交换第一列(c)和第三列(z) $\rightarrow$ \code{z 200 c}
+\end{itemize}
+
+\textbf{awk 核心概念}：
+\begin{itemize}[leftmargin=2em]
+    \item awk 按行处理，每行自动按空白字符分成列
+    \item \code{\$1, \$2, \$3...} 引用各列，\code{\$0} 表示整行
+    \item \code{NR} = 当前行号，\code{NF} = 当前行列数
+    \item \code{FS} = 输入分隔符（默认空白），\code{-F,} 可设为逗号
+    \item \code{BEGIN \{\}} 在处理前执行，\code{END \{\}} 在处理后执行
+\end{itemize}
+\end{exercise}
+
+\begin{exercise}{拆解 SSH 日志管道 + 从历史记录找出最常用命令}
+\textbf{要求}：拆解讲义中的 SSH 日志处理管道：每一步分别做了什么？然后仿照它构建一个管道，从 \code{\textasciitilde/.bash\_history}（或 \code{\textasciitilde/.zsh\_history}）中找出最常使用的 Shell 命令。
+
+\subsection*{第一部分：拆解 SSH 日志管道}
+
+\textbf{原始管道}：
+\begin{lstlisting}
+ssh myserver 'journalctl -u sshd -b-1 | grep "Disconnected from"' \
+  | sed -E 's/.*Disconnected from .* user (.*) [^ ]+ port.*/\1/' \
+  | sort | uniq -c \
+  | sort -nk1,1 | tail -n10 \
+  | awk '{print $2}' | paste -sd,
+\end{lstlisting}
+
+\textbf{逐步拆解}：
+\begin{table}[h]
+\centering
+\begin{tabular}{c|l|l}
+\toprule
+\textbf{步骤} & \textbf{命令} & \textbf{作用} \\
+\midrule
+1 & \code{ssh myserver '...'} & 登录远程服务器，在远程执行引号内的命令 \\
+2 & \code{journalctl -u sshd -b-1} & 查看 sshd 服务在上一次启动时的系统日志 \\
+3 & \code{grep "Disconnected from"} & 筛选包含「断开连接」的日志行 \\
+4 & \code{sed -E 's/...user (.*) .../\1/'} & 用正则提取用户名，\code{(.*)} 捕获，\code{\textbackslash1} 输出 \\
+5 & \code{sort} & 对用户名排序（相同名字排在一起） \\
+6 & \code{uniq -c} & 去重并统计每个用户名出现次数 \\
+7 & \code{sort -nk1,1} & 按第一列（次数）数值排序（升序） \\
+8 & \code{tail -n10} & 取最后 10 个，即出现次数最多的 10 个 \\
+9 & \code{awk '\{print \$2\}'} & 只输出第二列（用户名），去掉次数 \\
+10 & \code{paste -sd,} & 把多行合并为一行，用逗号分隔 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{最终输出示例}：
+\begin{lstlisting}
+postgres,mysql,oracle,dell,ubuntu,inspur,test,admin,user,root
+\end{lstlisting}
+
+\subsection*{第二部分：从历史记录找出最常用命令}
+
+\textbf{命令（zsh 用户）}：
+\begin{lstlisting}
+LC_ALL=C awk '{print $1}' ~/.zsh_history | sort | uniq -c | sort -rn | head -n 10
+\end{lstlisting}
+
+\textbf{命令（bash 用户）}：
+\begin{lstlisting}
+awk '{print $1}' ~/.bash_history | sort | uniq -c | sort -rn | head -n 10
+\end{lstlisting}
+
+\textbf{逐步拆解}：
+\begin{enumerate}[leftmargin=2em]
+    \item \code{awk '\{print \$1\}'}：提取每行的第一个词（即命令名，去掉参数）
+    \item \code{sort}：排序
+    \item \code{uniq -c}：统计每个命令出现次数
+    \item \code{sort -rn}：按次数逆序排序
+    \item \code{head -n 10}：取前 10 个
+\end{enumerate}
+
+\textbf{实际输出（zsh\_history）}：
+\begin{lstlisting}
+123 brew
+ 25 cd
+ 22 git
+ 20 sudo
+ 14 ls
+  9 echo
+  8 fc-match
+  7 which
+  7 find
+  6 mkdir
+\end{lstlisting}
+
+\textbf{说明}：
+\begin{itemize}[leftmargin=2em]
+    \item zsh 的历史文件默认格式可能包含时间戳前缀（\code{: 1234567890:0;command}），如果有，需要先用 \code{sed 's/\^{}: [0-9]*:[0-9]*;//'} 去掉前缀
+    \item \code{LC\_ALL=C} 防止遇到非 UTF-8 字节时 awk/sed 报错
+    \item 最常用的命令是 \code{brew}（macOS 包管理器），其次是 \code{cd}、\code{git}、\code{sudo}、\code{ls}
+\end{itemize}
+\end{exercise}
+

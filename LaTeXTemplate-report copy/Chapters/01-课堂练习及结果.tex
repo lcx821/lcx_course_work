@@ -1,0 +1,307 @@
+\chapter{课堂练习及结果}
+\label{cp:introduction}
+% TODO: 在这里写第一章内容，替换掉示例文字。
+% 这是一行测试的文字\\换行后如何？Welcome to the introduction of your dissertation. The introduction of a dissertation serves as a critical component, setting the tone and laying the foundation for the entire research endeavour. It is tasked with providing a clear and concise overview of the research topic, elucidating the context and significance of the study within the broader academic landscape. A well-crafted dissertation introduction should delineate the research problem or question, offering a rationale for its relevance and addressing any existing gaps in knowledge. Furthermore, it typically outlines the objectives and aims of the study, guiding the reader through the anticipated contributions and outcomes. In addition, the introduction often encapsulates the methodology employed, presenting the chosen approach and rationale behind it. Lastly, it functions as a road-map, offering a brief glimpse into the structure and organisation of the dissertation, thereby orienting the reader and facilitating comprehension of the subsequent chapters. Overall, a dissertation introduction should engage the reader's interest, provide a clear framework for the research, and justify its importance in the academic realm. For a clearer and reader-friendly experience on referencing chapters, please refer to the chapter titled \nameref{cp:citations} (referred to as \autoref{cp:citations}).
+
+\section{第 5 题 控制一个可清理的后台任务}
+
+\subsection{实验内容}
+
+如图\ref{fig:创建worker脚本}所示，使用vim编辑器创建 worker.sh。脚本通过 trap 命令设置了 TERM 和 INT 两个信号的处理函数，当脚本收到这两个信号时，会执行 \verb|echo CLEAN_EXIT >> cleanup.log; exit 0|，即向 cleanup.log 写入 CLEAN\_EXIT 后以退出码 0 正常结束；随后进入无限循环，每秒钟打印一次计数器 n 并将其自增。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.05.53.png}
+    \caption{创建 worker.sh}
+    \label{fig:创建worker脚本}
+\end{figure}
+
+如图\ref{fig:赋予执行权限5}所示，使用 chmod +x 命令为 worker.sh 添加执行权限。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.06.12.png}
+    \caption{为 worker.sh 添加执行权限}
+    \label{fig:赋予执行权限5}
+\end{figure}
+
+如图\ref{fig:前台启动并挂起}所示，在前台启动 worker.sh，并通过重定向把 stdout 写入 stdout.log、stderr 写入 stderr.log；随后使用 Ctrl-Z 挂起该任务，从图中可以看到 zsh 输出了 suspended 提示，说明任务已被挂起。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.07.00.png}
+    \caption{前台启动 worker.sh 并挂起}
+    \label{fig:前台启动并挂起}
+\end{figure}
+
+如图\ref{fig:后台继续运行}所示，使用 bg 命令让被挂起的任务转到后台继续运行，并使用 jobs 命令确认任务状态。从图中可以看到，jobs 输出 \verb|[1] + running ./worker.sh > stdout.log 2> stderr.log|，说明任务正在后台运行。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.07.15.png}
+    \caption{使用 bg 让任务后台继续运行}
+    \label{fig:后台继续运行}
+\end{figure}
+
+如图\ref{fig:发送SIGTERM}所示，使用 jobs -p 取得后台任务的进程号（PID），并通过 kill 命令发送 SIGTERM 信号结束任务，全程没有手工抄写 PID，也没有使用 kill -9。任务收到 SIGTERM 信号后触发了 trap 中设置的清理逻辑，最终以 \verb|[1] + done| 结束（done 表示进程以退出码 0 正常退出，而非被信号强制终止），随后 jobs 命令输出为空，说明任务已经退出。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.08.13.png}
+    \caption{发送 SIGTERM 信号结束任务}
+    \label{fig:发送SIGTERM}
+\end{figure}
+
+在图\ref{fig:发送SIGTERM}中，kill 为发送信号命令，-TERM 表示发送 SIGTERM（终止）信号，jobs -p 用于输出后台任务的进程号。需要注意的是，zsh 中直接执行 \verb|kill -TERM $(jobs -p)| 时，命令替换 \verb|$(jobs -p)| 展开后得到的是任务的完整状态行而非纯 PID，导致出现 illegal pid 报错，需要先正确提取出纯 PID 再发送信号。
+
+如图\ref{fig:确认CLEANEXIT}所示，使用 grep 命令在 cleanup.log 中查找 CLEAN\_EXIT，输出结果为 CLEAN\_EXIT，说明脚本的 trap 清理逻辑被正确触发，任务已经干净地退出。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.08.29.png}
+    \caption{确认 cleanup.log 中出现 CLEAN\_EXIT}
+    \label{fig:确认CLEANEXIT}
+\end{figure}
+
+\subsection{实验结果}
+
+第五题的 github 的 commit 记录和 push 记录如图\ref{fig:github记录Q5}所示。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 17.18.08.png}
+    \caption{github记录Q5}
+    \label{fig:github记录Q5}
+\end{figure}
+
+\section{第 6 题 语义重构与本地开发反馈}
+
+\subsection{实验内容}
+
+按照题目给定内容，在 q06 目录中创建 \verb|math_utils.py|、\verb|app.py| 和 \verb|test_math_utils.py| 三个 Python 文件，并在 VSCode 中打开 q06，启用 Pylance（Python 语言服务器）。其中 \verb|math_utils.py| 定义了函数 \verb|total_price|，\verb|app.py| 和 \verb|test_math_utils.py| 分别导入并调用、测试该函数。
+
+如图\ref{fig:跳转到定义}和图\ref{fig:跳转到定义结果}所示，在 app.py 中把光标放到 \verb|total_price| 上，Pylance 悬浮显示该函数的定义信息（参数类型和返回类型）；再通过“跳转到定义”（Go to Definition）定位到 \verb|math_utils.py| 中函数 \verb|total_price| 的定义处。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.40.07.png}
+    \caption{悬浮显示 total\_price 定义}
+    \label{fig:跳转到定义}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.40.40.png}
+    \caption{跳转到 math\_utils.py 中的定义}
+    \label{fig:跳转到定义结果}
+\end{figure}
+
+如图\ref{fig:查找引用}所示，使用“查找所有引用”（Find All References）功能，可以看到 \verb|total_price| 在 \verb|app.py|、\verb|math_utils.py| 和 \verb|test_math_utils.py| 中的全部引用位置。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.41.23.png}
+    \caption{查找 total\_price 的所有引用}
+    \label{fig:查找引用}
+\end{figure}
+
+如图\ref{fig:重命名符号}和图\ref{fig:重命名结果}所示，使用“重命名符号”（Rename Symbol）把 \verb|total_price| 重命名为 \verb|calculate_total|，语言服务器会同步修改函数定义以及所有代码引用，保证定义与引用一致。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.43.27.png}
+    \caption{使用重命名符号重命名 total\_price}
+    \label{fig:重命名符号}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.44.33.png}
+    \caption{重命名完成后的 calculate\_total}
+    \label{fig:重命名结果}
+\end{figure}
+
+如图\ref{fig:加入未使用import}所示，在 app.py 中临时加入未使用的 \verb|import os|，用于后续使用 ruff 检测并删除。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.45.11.png}
+    \caption{临时加入未使用的 import os}
+    \label{fig:加入未使用import}
+\end{figure}
+
+如图\ref{fig:ruff检查}所示，运行 \verb|ruff check app.py|，ruff 检查出两个问题：F401 表示 os 被导入但未使用，I001 表示 import 块未排序或未格式化。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.51.37.png}
+    \caption{ruff check 发现未使用 import}
+    \label{fig:ruff检查}
+\end{figure}
+
+如图\ref{fig:ruff修复}所示，运行 \verb|ruff check --fix app.py| 自动修复，输出显示 2 个错误全部被修复。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.52.17.png}
+    \caption{ruff check --fix 修复问题}
+    \label{fig:ruff修复}
+\end{figure}
+
+如图\ref{fig:pytest通过6}所示，运行 pytest，输出显示 1 个测试通过，说明重命名后的代码仍然正确。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-03 10.56.50.png}
+    \caption{pytest 测试通过}
+    \label{fig:pytest通过6}
+\end{figure}
+
+\subsection{实验结果}
+
+第六题的 github 的 commit 记录和 push 记录如图\ref{fig:github记录Q6}所示。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 17.18.57.png}
+    \caption{github记录Q6}
+    \label{fig:github记录Q6}
+\end{figure}
+
+\section{第 7 题 用调试器定位归并排序缺陷}
+
+\subsection{实验内容}
+
+如图\ref{fig:创建mergesort}所示，使用vim编辑器创建 merge\_sort.py，内容为题目给定的存在缺陷的归并排序代码，并用 cat 命令查看文件内容。其中 merge 函数 else 分支中的 \verb|result.append(right[i])| 处存在缺陷（正确应为 \verb|right[j]|）。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 11.26.35.png}
+    \caption{创建 merge\_sort.py}
+    \label{fig:创建mergesort}
+\end{figure}
+
+如图\ref{fig:运行归并排序}所示，直接运行 merge\_sort.py，可以看到输出结果错误（或抛出异常），确认代码存在缺陷。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 11.27.15.png}
+    \caption{运行 merge\_sort.py 结果错误}
+    \label{fig:运行归并排序}
+\end{figure}
+
+如图\ref{fig:pdb调试}所示，使用 \verb|python3 -m pdb merge_sort.py| 启动调试器：先用 l 命令查看源码，再在 merge 函数的第 8 行（缺陷行）使用 b 8 设置断点，用 c 命令继续执行到断点处，然后使用 p 命令打印 i、j、left[i]、right[j] 的值。从图中可以看到，此时 i=0、j=0、left[i]=3、right[j]=1，即 left[i] > right[j]，本应把较小的 right[j] 加入结果，但缺陷代码取的是 right[i]，因此导致排序错误。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 11.31.45.png}
+    \caption{使用 pdb 调试并观察变量}
+    \label{fig:pdb调试}
+\end{figure}
+
+在图\ref{fig:pdb调试}中，b 8 表示在第 8 行设置断点，c 表示继续执行，p 表示打印表达式，n 表示单步执行下一条语句，q 表示退出调试器。通过观察 i、j、left[i]、right[j] 的值，可以定位到缺陷：else 分支中应使用 \verb|right[j]| 而非 \verb|right[i]|。将 merge 函数中的 \verb|result.append(right[i])| 修改为 \verb|result.append(right[j])| 即可完成最小修复，没有用 sorted 替换归并排序。
+
+如图\ref{fig:创建测试7}所示，编写 test\_merge\_sort.py，增加两个测试：题目给定的输入 \verb|[3, 1, 4, 1, 5, 9, 2, 6]| 和含重复元素的列表 \verb|[5, 2, 2, 7, 1, 1, 5]|。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 11.39.11.png}
+    \caption{编写 test\_merge\_sort.py 测试}
+    \label{fig:创建测试7}
+\end{figure}
+
+如图\ref{fig:归并排序测试通过}所示，运行 \verb|pytest test_merge_sort.py -v|，输出显示两个测试全部通过，说明缺陷已被正确修复。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 11.43.25.png}
+    \caption{归并排序测试通过}
+    \label{fig:归并排序测试通过}
+\end{figure}
+
+\subsection{实验结果}
+
+第七题的 github 的 commit 记录和 push 记录如图\ref{fig:github记录Q7}所示。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 17.19.43.png}
+    \caption{github记录Q7}
+    \label{fig:github记录Q7}
+\end{figure}
+
+\section{第 8 题 先测量，再优化慢速词频程序}
+
+\subsection{实验内容}
+
+如图\ref{fig:创建词频程序}所示，使用vim编辑器创建 generate\_words.py 和 wordfreq.py。generate\_words.py 使用固定的随机种子生成包含 1000 个不同词、共 30000 个词的 words.txt；wordfreq.py 通过列表 unique 逐词判断去重，统计不重复词的数量。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 17.05.07.png}
+    \caption{创建 generate\_words.py 和 wordfreq.py}
+    \label{fig:创建词频程序}
+\end{figure}
+
+如图\ref{fig:生成词表}所示，运行 \verb|python3 generate_words.py| 生成 words.txt。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 17.10.56.png}
+    \caption{生成 words.txt}
+    \label{fig:生成词表}
+\end{figure}
+
+如图\ref{fig:time原程序}所示，使用 time 命令运行原程序 wordfreq.py 两次，记录耗时。两次输出 count=1000，耗时分别为 0.149s 和 0.127s。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 17.11.23.png}
+    \caption{使用 time 运行原程序两次}
+    \label{fig:time原程序}
+\end{figure}
+
+如图\ref{fig:cProfile分析}所示，使用 \verb|python3 -m cProfile -s cumulative wordfreq.py| 进行性能分析。从输出可以看到，程序共 1012 次函数调用，累计耗时 0.094s，主要耗时集中在 wordfreq.py 第 1 行的模块级代码（cumtime 0.094s），即 for 循环中对列表 unique 的 \verb|word not in unique| 判断。由于列表的成员判断复杂度为 $O(n)$，整体复杂度为 $O(n^2)$，这是程序的性能瓶颈。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 17.12.04.png}
+    \caption{使用 cProfile 分析耗时}
+    \label{fig:cProfile分析}
+\end{figure}
+
+如图\ref{fig:创建优化程序}所示，创建优化后的 wordfreq\_opt.py，将去重用的列表 unique 改为集合 set：\verb|unique = set(words)|。集合的成员判断平均复杂度为 $O(1)$，可以把整体复杂度从 $O(n^2)$ 降到 $O(n)$，且不改变最终的 count 结果，也没有写死 1000。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 17.14.17.png}
+    \caption{创建优化后的 wordfreq\_opt.py}
+    \label{fig:创建优化程序}
+\end{figure}
+
+如图\ref{fig:time优化程序}所示，使用相同输入再次运行优化后的程序两次，耗时分别为 0.053s 和 0.043s。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 17.14.45.png}
+    \caption{使用 time 运行优化程序两次}
+    \label{fig:time优化程序}
+\end{figure}
+
+优化前两次耗时为 0.149s 和 0.127s，中位数为 0.138s；优化后两次耗时为 0.053s 和 0.043s，中位数为 0.048s。加速比为 $0.138 / 0.048 \approx 2.9$，即优化后性能约提升到原来的 2.9 倍，且最终 count 仍为 1000，结果保持不变。
+
+\subsection{实验结果}
+
+第八题的 github 的 commit 记录和 push 记录如图\ref{fig:github记录Q8}所示。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{截屏2026-09-06 17.20.25.png}
+    \caption{github记录Q8}
+    \label{fig:github记录Q8}
+\end{figure}
+
+\section{Github仓库地址}
+
+本次课程的报告、练习、代码等，均已上传至个人github仓库。\\Github仓库地址：\url{https://github.com/lcx821/lcx_course_work}
+
