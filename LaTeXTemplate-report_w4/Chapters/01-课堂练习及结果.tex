@@ -1,0 +1,377 @@
+\chapter{课堂练习及结果}
+\label{cp:introduction}
+
+\section{第 13 题 建立可执行的本地质量门禁}
+
+\subsection{实验内容}
+
+在课程仓库的 \verb|w4| 目录下完成第四周的四个练习。第十三题复用第三周第十题完成的 greetlab 包，把它复制为 \verb|q13| 并建立一个轻量、可执行的本地质量检查。
+
+如图\ref{fig:q13-copy}所示，先进入课程仓库并在 \verb|w4| 目录下用 \verb|cp -R ../w3/q10 q13| 把第十题的整个工程复制为 q13。由于 q10 目录中残留着上次实验生成的虚拟环境与各类缓存，如图\ref{fig:q13-clean}所示，用 \verb|rm -rf| 删除 \verb|q13/test_env|、\verb|q13/.pytest_cache| 以及 \verb|src|、\verb|tests| 下的 \verb|__pycache__| 目录，然后把工程改为由 pyproject.toml 统一驱动，不再依赖 q10 目录里的就地虚拟环境。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{q13_03_copy.png}
+    \caption{把第三周的 q10 工程复制为 q13}
+    \label{fig:q13-copy}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{q13_04_clean.png}
+    \caption{删除 q10 遗留的虚拟环境与缓存目录}
+    \label{fig:q13-clean}
+\end{figure}
+
+如图\ref{fig:q13-pyproject}所示，用 heredoc 方式重写 \verb|q13/pyproject.toml|，在原有构建配置之后补充两段最小配置：\verb|[tool.ruff]| 段把 line-length 设为 88；\verb|[tool.ruff.lint]| 段的 select 取 \verb|["E", "F"]|，只启用 pycodestyle 的 E 类规则与 Pyflakes 的 F 类规则；\verb|[tool.pytest.ini_options]| 段把 pythonpath 设为 \verb|["src"]|、testpaths 设为 \verb|["tests"]|，使 pytest 不必额外安装到环境中即可导入 src 下的 greetlab 包。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{q13_06_pyproject.png}
+    \caption{在 pyproject.toml 中补充 ruff 与 pytest 的最小配置}
+    \label{fig:q13-pyproject}
+\end{figure}
+
+如图\ref{fig:q13-test}所示，用 heredoc 重写 \verb|tests/test_cli.py|，补上一个正常姓名测试和一个空白姓名测试：前者用 \verb|monkeypatch.setattr| 把 \verb|sys.argv| 替换为 \texttt{["sdt-greet", "--name", "Alice"]}，调用 \verb|main()| 后通过 capsys 捕获标准输出，断言其等于 \verb|"Hello, Alice!\n"|；后者把姓名换成三个空格，用 \verb|pytest.raises(SystemExit)| 捕获退出并把返回码断言为 2。两个用例都含有明确的断言，而不是只调用函数。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{q13_08_write_test.png}
+    \caption{补充正常姓名与空白姓名两个测试}
+    \label{fig:q13-test}
+\end{figure}
+
+如图\ref{fig:q13-ruff}所示，在 q13 目录下依次运行 \verb|ruff format .| 与 \verb|ruff check .|。前者输出 \texttt{1 file reformatted, 3 files left unchanged}，就地重排了格式不一致的文件；后者输出 \texttt{All checks passed!}。整个过程中没有使用任何工具级别的忽略规则（既没有 \verb|# noqa| 也没有 lint.ignore 配置），所有问题都在代码层面修复。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q13_11_ruff_check.png}
+    \caption{ruff format 与 ruff check 全部通过}
+    \label{fig:q13-ruff}
+\end{figure}
+
+如图\ref{fig:q13-pytest}所示，运行 \verb|pytest|，pytest 读取 pyproject.toml 中的 \verb|[tool.pytest.ini_options]| 配置，收集到 2 个用例并全部通过，结果为 \texttt{2 passed in 0.00s}。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{q13_12_pytest.png}
+    \caption{pytest 收集并跑通两个用例}
+    \label{fig:q13-pytest}
+\end{figure}
+
+如图\ref{fig:q13-checksh}所示，编写 \verb|check.sh|：首行为 shebang \texttt{\#!/usr/bin/env bash}，第二行 \texttt{set -euo pipefail} 让脚本在命令返回非零、引用未定义变量或管道中间环节失败时立即退出，随后依次执行 \texttt{ruff format --check .}、\texttt{ruff check .} 和 \verb|pytest|。这里用 \verb|--check| 而不是就地改写，保证门禁只做检查、不修改工作区。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q13_13_write_checksh.png}
+    \caption{编写 check.sh 依次执行三项检查}
+    \label{fig:q13-checksh}
+\end{figure}
+
+用 \verb|chmod +x check.sh| 赋予执行权限后，如图\ref{fig:q13-run}所示运行 \verb|./check.sh|，输出依次为 \texttt{4 files already formatted}、\texttt{All checks passed!} 与 \texttt{2 passed in 0.00s}，三项检查全部通过；如图\ref{fig:q13-exit}所示，用 \verb|echo $?| 确认脚本的返回码为 0。若任一环节失败，\verb|set -e| 会让脚本立即以非零码退出，因此这个返回码可以直接作为后续提交或 CI 判断门禁是否通过的依据。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{q13_15_run_checksh.png}
+    \caption{运行 ./check.sh 三项检查全部通过}
+    \label{fig:q13-run}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\textwidth]{q13_16_exitcode.png}
+    \caption{确认 check.sh 返回码为 0}
+    \label{fig:q13-exit}
+\end{figure}
+
+提交前先清掉本次运行产生的 \verb|.pytest_cache|、\verb|__pycache__| 与 egg-info 目录，如图\ref{fig:q13-commit}所示，\verb|git add .| 后提交 \texttt{9f21d2d}，共变更 6 个文件、新增 59 行，包括 ai\_log.md、带执行权限的 check.sh（权限 100755）、pyproject.toml、\verb|src/greetlab/__init__.py|、\verb|src/greetlab/cli.py| 与 \verb|tests/test_cli.py|。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{q13_19_git_commit.png}
+    \caption{第十三题的 git 提交记录}
+    \label{fig:q13-commit}
+\end{figure}
+
+\subsection{实验结果}
+
+第十三题在 q13 中建立了一道可执行的本地质量门禁：pyproject.toml 补充了 ruff（line-length 88、select E/F）与 pytest（pythonpath src、testpaths tests）的最小配置；\verb|tests/test_cli.py| 补齐正常姓名与空白姓名两个用例，两者都含有有效断言；\verb|ruff format|、\verb|ruff check| 与 \verb|pytest| 全部通过，且未使用任何全局忽略规则。\verb|check.sh| 以 \verb|--check| 模式依次执行这三项检查，运行后返回码为 0，可作为一个命令被后续提交、Make 目标或 CI 直接复用。
+
+\section{第 14 题 让 Make 只重建真正受影响的产物}
+
+\subsection{实验内容}
+
+第十四题在 q14 中按给定内容创建三个源文件，只需完成 Makefile。
+
+如图\ref{fig:q14-csv}所示，用 heredoc 创建 \verb|data.csv|，内容为表头 \texttt{name,value} 与 \texttt{alpha,2}、\texttt{beta,3}、\texttt{gamma,5} 三行数据；如图\ref{fig:q14-stats}所示创建 \verb|stats.py|，用 \verb|csv.DictReader| 逐行读取 value 字段求和，把总数写入 \verb|stats.txt|；如图\ref{fig:q14-build}所示创建 \verb|build_report.py|，读取 \verb|report.md| 与 \verb|stats.txt| 拼成 \verb|report.txt|；如图\ref{fig:q14-md}所示创建只有一行标题 \verb|# Data Report| 的模板 \verb|report.md|。四者构成一条数据链路：\verb|data.csv| 经 \verb|stats.py| 汇总出 \verb|stats.txt|，再由 \verb|build_report.py| 结合模板 \verb|report.md| 生成最终产物 \verb|report.txt|。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q14_04_data_csv.png}
+    \caption{创建数据文件 data.csv}
+    \label{fig:q14-csv}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q14_05_stats_py.png}
+    \caption{创建 stats.py 统计 value 总和}
+    \label{fig:q14-stats}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q14_06_build_report_py.png}
+    \caption{创建 build\_report.py 合成最终产物}
+    \label{fig:q14-build}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q14_07_report_md.png}
+    \caption{创建模板文件 report.md}
+    \label{fig:q14-md}
+\end{figure}
+
+如图\ref{fig:q14-makefile}所示，用 \verb|cat -et Makefile| 查看写好的 Makefile（\verb|-e| 把行尾的 \verb|$| 与制表符显示出来，便于确认配方行确实以 TAB 开头）。文件内容为：\verb|.PHONY: all clean| 声明 all 与 clean 是伪目标，避免与同名文件冲突；\verb|all: report.txt| 把最终产物 report.txt 作为默认目标；\verb|stats.txt: data.csv stats.py| 声明中间产物依赖数据文件与脚本，配方为 \verb|python3 stats.py|；\verb|report.txt: report.md stats.txt build_report.py| 声明最终产物依赖模板、中间产物与脚本，配方为 \verb|python3 build_report.py|；\verb|clean:| 的配方为 \verb|rm -f stats.txt report.txt|。整条链路的依赖被完整描述出来，make 才能据此判断哪一步真正需要重跑。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q14_09_cat_makefile.png}
+    \caption{查看 Makefile 的依赖与配方}
+    \label{fig:q14-makefile}
+\end{figure}
+
+如图\ref{fig:q14-first}所示，首次运行 \verb|make| 时两个产物都不存在，make 依次执行 \verb|python3 stats.py| 与 \verb|python3 build_report.py|；用 \verb|ls| 确认目录中出现了 \verb|stats.txt| 与 \verb|report.txt|，如图\ref{fig:q14-artifacts}所示，\verb|cat stats.txt| 得到 10（$2+3+5$），\verb|cat report.txt| 得到标题 \verb|# Data Report|、一个空行与 \verb|Total: 10|。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q14_10_make_first.png}
+    \caption{首次 make 依次生成两个产物}
+    \label{fig:q14-first}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q14_13_cat_report.png}
+    \caption{查看 stats.txt 与 report.txt 的内容}
+    \label{fig:q14-artifacts}
+\end{figure}
+
+如图\ref{fig:q14-second}所示，不修改任何文件再次运行 \verb|make|，输出 \texttt{make: Nothing to be done for `all'.}。因为 stats.txt 比 data.csv 与 stats.py 新，report.txt 又比它的三个依赖新，所有目标都是最新的，make 没有执行任何配方。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q14_14_make_second.png}
+    \caption{无改动时第二次 make 不执行任何配方}
+    \label{fig:q14-second}
+\end{figure}
+
+如图\ref{fig:q14-rebuild}所示，用 \verb|touch data.csv| 只更新数据文件的时间戳（内容不变），随后再次运行 \verb|make|。make 发现 data.csv 比 stats.txt 新，于是重跑 \verb|stats.py| 更新 stats.txt；又因为 report.txt 依赖 stats.txt，随之重跑 \verb|build_report.py|。这一步验证了依赖链是级联生效的：只改动最上游的输入，受影响的中间产物与最终产物都会按序重建。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q14_16_make_rebuild.png}
+    \caption{touch data.csv 后 make 级联重建两个产物}
+    \label{fig:q14-rebuild}
+\end{figure}
+
+如图\ref{fig:q14-clean}所示，运行 \verb|make clean|，执行配方 \verb|rm -f stats.txt report.txt|，只删除两个生成物；如图\ref{fig:q14-after-clean}所示，用 \verb|ls| 确认目录中只剩下 \verb|build_report.py|、\verb|data.csv|、\verb|Makefile|、\verb|report.md|、\verb|stats.py| 五个源文件与构建文件，中间产物与最终产物都被清理干净。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q14_17_make_clean.png}
+    \caption{make clean 只删除生成物}
+    \label{fig:q14-clean}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{q14_18_ls_after_clean.png}
+    \caption{clean 之后目录中只剩源文件}
+    \label{fig:q14-after-clean}
+\end{figure}
+
+如图\ref{fig:q14-commit}所示，\verb|git add .| 后提交 \texttt{991bebf}，变更 5 个文件、新增 24 行，即 Makefile、build\_report.py、data.csv、report.md 与 stats.py。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{q14_20_git_commit.png}
+    \caption{第十四题的 git 提交记录}
+    \label{fig:q14-commit}
+\end{figure}
+
+\subsection{实验结果}
+
+第十四题的 Makefile 用「目标: 依赖 + 配方」的方式完整描述了 \verb|data.csv| $\rightarrow$ \verb|stats.txt| $\rightarrow$ \verb|report.txt| 的构建链路，并把 all 与 clean 声明为伪目标。首次 \verb|make| 生成 stats.txt 与 report.txt 两个产物（分别为 10 与「\# Data Report / Total: 10」）；无改动时第二次 \verb|make| 提示 \texttt{Nothing to be done}，说明增量判断生效；\verb|touch data.csv| 后 \verb|make| 级联重建了 stats.txt 与 report.txt；\verb|make clean| 只删除这两个生成物，五个源文件全部保留。
+
+\section{第 15 题 把本地 API 数据转换为可读报告}
+
+\subsection{实验内容}
+
+如图\ref{fig:q15-json}所示，在 q15 中用 heredoc 把给定 JSON 保存为 \verb|packages.json|，共 5 条记录，每条包含 name、status、downloads、version 四个字段；用 \verb|jq 'length' packages.json| 确认文件可被正确解析并返回 5。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{q15_04_packages_json.png}
+    \caption{保存给定的 packages.json}
+    \label{fig:q15-json}
+\end{figure}
+
+如图\ref{fig:q15-server}所示，用 \verb|python3 -m http.server 8000 > server.log 2>&1 &| 在 q15 目录后台启动本地 HTTP 服务，把标准输出与标准错误一起重定向到 \verb|server.log|，作业号为 36391；再用 \verb|jobs| 确认该任务处于 running 状态。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{q15_06_http_server.png}
+    \caption{后台启动本地 HTTP 服务并确认作业状态}
+    \label{fig:q15-server}
+\end{figure}
+
+如图\ref{fig:q15-curl}所示，用 \verb|curl -fsS http://127.0.0.1:8000/packages.json| 从本地服务取回数据。其中 \verb|-f| 让服务器返回 4xx/5xx 时以非零码退出，而不是把错误页当成数据继续处理；\verb|-s| 关闭进度与统计信息；\verb|-S| 保证在出错时仍然打印错误原因，因此这条命令既安静又不会「静默失败」。终端中回显出的正是 packages.json 的原始内容。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 12.55.56.png}
+    \caption{用 curl -fsS 从本地服务获取 JSON 数据}
+    \label{fig:q15-curl}
+\end{figure}
+
+如图\ref{fig:q15-jq}所示，用管道把 curl 的输出交给 jq 依次展开、过滤与排序：先用 \verb|.[]| 展开数组，再用 \verb+select(.status == "active" and .downloads >= 100)+ 保留 status 为 active 且 downloads 不少于 100 的记录，筛掉 beta（inactive）与 epsilon（80），最后用 \verb|sort_by(-.downloads, .name)| 先按 downloads 降序、再按 name 升序排列。最终输出的顺序为 delta(450)、gamma(450)、alpha(120)——delta 与 gamma 下载量相同，按字母序 delta 排在前面。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 12.56.14.png}
+    \caption{用 jq 过滤 active 且下载量不少于 100 的记录并排序}
+    \label{fig:q15-jq}
+\end{figure}
+
+如图\ref{fig:q15-script}所示，用 vim 编写 \verb|api_report.sh|，把上面的 curl 与 jq 固化成一条可重复执行的命令：jq 使用 \verb|-r| 输出原始文本，先构造 Markdown 的表头（\verb|# Package Report| 标题、空行、name/version/downloads 三列表头与右对齐行），再用 \verb+map("| \(.name) | \(.version) | \(.downloads) |")+ 把每条记录格式化成表格行，展平后逐行输出，整体重定向到 \verb|summary.md|。\verb|chmod +x| 后运行 \verb|./api_report.sh|，再用 \verb|cat summary.md| 查看结果：表格共 3 行，依次为 delta(0.9.0, 450)、gamma(1.5.1, 450)、alpha(1.2.0, 120)，正是被筛选并排序后的记录。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 12.58.10.png}
+    \caption{编写并运行 api\_report.sh 生成 summary.md}
+    \label{fig:q15-script}
+\end{figure}
+
+如图\ref{fig:q15-ls}所示，用 \verb|ls -l| 确认目录下只有 \verb|api_report.sh|、\verb|packages.json|、\verb|server.log|、\verb|summary.md| 四个文件，其中 api\_report.sh 带有执行权限。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{截屏2026-09-14 12.58.27.png}
+    \caption{查看 q15 目录的内容与文件权限}
+    \label{fig:q15-ls}
+\end{figure}
+
+如图\ref{fig:q15-commit}所示，\verb|git add q15| 后提交 \texttt{1f41e3f}，变更 4 个文件、新增 34 行。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 13.05.36.png}
+    \caption{第十五题的 git 提交记录}
+    \label{fig:q15-commit}
+\end{figure}
+
+\subsection{实验结果}
+
+第十五题把本地数据放到了「HTTP 服务 + curl + jq」的链路上：\verb|packages.json| 由 \verb|python -m http.server 8000| 通过 \url{http://127.0.0.1:8000/packages.json} 提供；curl 用 \verb|-fsS| 获取，保证出错即失败而不静默；jq 按 \verb|status == "active"| 且 \verb|downloads >= 100| 过滤后按下载量降序、名称升序排序，得到 delta 与 gamma（各 450）在前、alpha（120）在后，beta 与 epsilon 被正确筛除。\verb|api_report.sh| 把这条链路固化为一条命令并生成 \verb|summary.md|，其标题与 name/version/downloads 三列表格均符合要求。
+
+\section{第 16 题 修复并交付一个陌生的小型工具仓库}
+
+\subsection{实验内容}
+
+第十六题复用第十三题的项目，在 q16 中完成一次 15 分钟的综合检查。
+
+如图\ref{fig:q16-copy}所示，在 \verb|w4| 下用 \verb|cp -R q13 q16| 把 q13 整体复制为 q16；进入后 \verb|ls| 可以看到 ai\_log.md、check.sh、pyproject.toml、src、tests 五个条目，即一个已经配好质量门禁的小型 Python 工程。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{截屏2026-09-14 13.01.51.png}
+    \caption{把 q13 复制为 q16 并查看目录结构}
+    \label{fig:q16-copy}
+\end{figure}
+
+如图\ref{fig:q16-bug}所示，用 vim 把 \verb|src/greetlab/cli.py| 的问候语句子临时改成始终返回字面量的 \verb|print("Hello, name!")|（即去掉 f-string 的 \verb|f| 前缀），人为制造一个「输出与参数无关」的缺陷；\verb|cat| 查看文件确认改动已经生效。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 13.07.05.png}
+    \caption{把问候语临时改为始终返回字面量}
+    \label{fig:q16-bug}
+\end{figure}
+
+如图\ref{fig:q16-fail}所示，运行 \verb|./check.sh|：ruff format 与 ruff check 都通过，但 pytest 失败——\verb|tests/test_cli.py::test_normal_name| 在断言 \verb|captured.out == "Hello, Alice!\n"| 时实际得到 \verb|'Hello, name!\n'|，抛出 AssertionError，结果为 \texttt{1 failed, 1 passed in 0.02s}。值得注意的是空白姓名用例仍然通过，因为参数校验逻辑没有被改动，这正是「测试只暴露了部分症状」的典型情形。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 13.09.53.png}
+    \caption{注入缺陷后 check.sh 中 test\_normal\_name 失败}
+    \label{fig:q16-fail}
+\end{figure}
+
+如图\ref{fig:q16-fix}所示，把 \verb|cli.py| 恢复成 f-string 形式的 \verb|print(f"Hello, {a.name}!")|，再次运行 \verb|./check.sh|，输出 \texttt{4 files already formatted}、\texttt{All checks passed!} 与 \texttt{2 passed in 0.00s}，两个用例全部通过。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 13.12.11.png}
+    \caption{修复问候语后 check.sh 全部通过}
+    \label{fig:q16-fix}
+\end{figure}
+
+如图\ref{fig:q16-makefile}所示，编写最小 Makefile：\verb|.PHONY: check build clean| 声明三个伪目标；\verb|check:| 的配方为 \verb|./check.sh|，直接复用第十三题建立的门禁；\verb|build:| 的配方为 \texttt{python3 -m build --wheel}；\verb|clean:| 的配方为 \texttt{rm -rf build dist *.egg-info}。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{截屏2026-09-14 13.13.17.png}
+    \caption{编写 q16 的最小 Makefile}
+    \label{fig:q16-makefile}
+\end{figure}
+
+如图\ref{fig:q16-makecheck}所示，运行 \verb|make check|，make 先回显它执行的命令行 \verb|./check.sh|，随后脚本的三项检查全部通过、2 passed。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 13.13.33.png}
+    \caption{make check 复用 check.sh 并全部通过}
+    \label{fig:q16-makecheck}
+\end{figure}
+
+如图\ref{fig:q16-buildfail}所示，运行 \verb|make build| 时先遇到一次失败：python3 报 \texttt{No module named build}，make 以 \texttt{*** [build] Error 1} 结束，\verb|ls dist| 也提示 \texttt{dist: No such file or directory}。原因是当前 shell 使用的 Homebrew Python 环境里没有安装 build 构建工具。如图\ref{fig:q16-venv}所示，在项目虚拟环境（提示符前缀为 \texttt{(.venv)}）中再次执行 \verb|make build|，构建过程开始创建隔离环境并安装 setuptools；最终如图\ref{fig:q16-wheel}所示，输出 \texttt{Successfully built greetlab\_25020007076-0.1.0-py3-none-any.whl}，在 dist 目录下成功产出 wheel。用 \verb|shasum -a 256| 对生成的 wheel 计算 SHA-256 摘要，结果为 \texttt{c3e33ba5b23525ec6c0e38\allowbreak cbbb48d88c8c99f42fe14\allowbreak b5966b2093177595d8701}。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 13.13.55.png}
+    \caption{缺少 build 工具时 make build 失败}
+    \label{fig:q16-buildfail}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 13.34.31.png}
+    \caption{在虚拟环境中重新执行 make build}
+    \label{fig:q16-venv}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 13.34.44.png}
+    \caption{成功构建出 greetlab 的 wheel 产物}
+    \label{fig:q16-wheel}
+\end{figure}
+
+如图\ref{fig:q16-commit}所示，\verb|git add .| 后提交 \texttt{3fffeea}，共变更 18 个文件、新增 97 行，包括 Makefile、check.sh、修复后的 \verb|src/greetlab/cli.py|、\verb|tests/test_cli.py|、ai\_log.md 以及 dist 下生成的 wheel。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 13.39.37.png}
+    \caption{第十六题的 git 提交记录}
+    \label{fig:q16-commit}
+\end{figure}
+
+\subsection{实验结果}
+
+第十六题在复用的 q13 工程上完成了一次综合检查：注入「问候语写死为字面量」的缺陷后，\verb|check.sh| 中只有 test\_normal\_name 失败（\texttt{1 failed, 1 passed}），把实现改回 f-string 后三项检查全部通过。最小 Makefile 提供 check、build、clean 三个目标，\verb|make check| 复用 \verb|check.sh| 并全部通过；\verb|make build| 在缺少 build 工具的环境下会以 Error 1 明确失败，在装有该工具的虚拟环境中则成功产出 \texttt{greetlab\_25020007076-0.1.0-py3-none-any.whl}，其 SHA-256 为 \texttt{c3e33ba5b2\dots 595d8701}。最终改动以一次提交 \texttt{3fffeea}（18 个文件、97 行新增）交付。
+
+\section{Github仓库地址}
+
+本次课程的报告、练习、代码等，均已上传至个人github仓库。\\Github仓库地址：\url{https://github.com/lcx821/lcx_course_work}

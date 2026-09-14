@@ -1,0 +1,298 @@
+\chapter{综合实例练习：质量门禁、构建自动化与数据管道}
+\label{cp:ms4-practice}
+
+本章把第四周课上讲到的操作拆成 10 个最小实例，每个实例只做一件事：要么是一条命令，要么是一次编辑，当场执行、当场看输出。四个小节分别对应本周的四道练习题——本地质量门禁（第 13 题）、用 Make 描述构建链路（第 14 题）、本地服务与命令行数据加工（第 15 题）、打包交付与产物校验（第 16 题）。所有命令都在课程仓库的 \verb|w4| 目录下执行，截图取自实际操作过程。
+
+\section{本地质量门禁：ruff、pytest 与 check.sh}
+
+\begin{exercise}{用 vim 编写带断言的 pytest 用例}
+\textbf{要求}：质量门禁的第一步是「有测试可跑」。用 vim 在 \verb|tests/test_cli.py| 中补上两个用例：一个正常姓名、一个只含空白字符的姓名。两个用例都必须有明确断言，而不是只把被测函数调用一遍。
+
+\textbf{操作命令}：
+\begin{lstlisting}
+cd w4/q13
+vim tests/test_cli.py
+cat tests/test_cli.py
+\end{lstlisting}
+
+\textbf{用例代码}：
+\begin{lstlisting}[language=Python]
+def test_normal_name(capsys, monkeypatch):
+    monkeypatch.setattr("sys.argv", ["sdt-greet", "--name", "Alice"])
+    main()
+    captured = capsys.readouterr()
+    assert captured.out == "Hello, Alice!\n"
+
+def test_blank_name_exits_with_2(monkeypatch):
+    monkeypatch.setattr("sys.argv", ["sdt-greet", "--name", "   "])
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 2
+\end{lstlisting}
+
+\textbf{结果说明}：如图\ref{fig:ms4-01}所示，vim 编辑结束后用 \verb|cat| 回显整个文件，可以看到两个用例把断言落在了可观察的行为上：前者用 \verb|monkeypatch.setattr| 把 \verb|sys.argv| 换成 \texttt{["sdt-greet", "--name", "Alice"]}，调用 \verb|main()| 后用 capsys 捕获标准输出，断言其等于 \texttt{"Hello, Alice!\textbackslash n"}；后者把姓名换成三个空格，用 \verb|pytest.raises(SystemExit)| 捕获退出并把返回码断言为 2。这样写的用例在实现被改坏时会真的失败，而不是永远通过。
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.95\textwidth]{q13_08_write_test.png}
+    \caption{用 vim 编写两个带断言的测试用例并 cat 回显}
+    \label{fig:ms4-01}
+\end{figure}
+\end{exercise}
+
+\begin{exercise}{在 pyproject.toml 中配置 ruff 与 pytest}
+\textbf{要求}：让工具从项目清单里读配置，而不是每次在命令行上敲参数。用 vim 在 \verb|q13/pyproject.toml| 末尾追加三段最小配置，再用 \verb|cat| 回显确认。
+
+\textbf{操作命令}：
+\begin{lstlisting}
+cd w4
+vim q13/pyproject.toml
+cat q13/pyproject.toml
+\end{lstlisting}
+
+\textbf{追加的配置}：
+\begin{lstlisting}
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+\end{lstlisting}
+
+\textbf{结果说明}：如图\ref{fig:ms4-02}所示，回显出的 pyproject.toml 除了原有的 \verb|[build-system]|、\verb|[project]|、\verb|[project.scripts]| 之外，末尾多了三段：\verb|[tool.ruff]| 把行宽定为 88；\verb|[tool.ruff.lint]| 的 \verb|select| 只启用 pycodestyle 的 E 类与 Pyflakes 的 F 类规则；\verb|[tool.pytest.ini_options]| 把 \verb|pythonpath| 设为 \texttt{["src"]}、\verb|testpaths| 设为 \texttt{["tests"]}，于是 pytest 不用被安装进环境也能导入 src 下的 greetlab 包。
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.92\textwidth]{q13_07_cat_pyproject.png}
+    \caption{pyproject.toml 中的 ruff 与 pytest 配置}
+    \label{fig:ms4-02}
+\end{figure}
+\end{exercise}
+
+\begin{exercise}{用 ruff 统一代码风格并做静态检查}
+\textbf{要求}：一条命令统一格式、一条命令做静态检查，两条命令都不修改检查规则。
+
+\textbf{操作命令}：
+\begin{lstlisting}
+cd q13
+ruff format .
+ruff check .
+\end{lstlisting}
+
+\textbf{结果说明}：如图\ref{fig:ms4-03a}所示，\verb|ruff format .| 就地重排格式不一致的文件，输出 \texttt{1 file reformatted, 3 files left unchanged}，即扫描到的 4 个 Python 文件中只有 1 个需要改写；如图\ref{fig:ms4-03b}所示，\verb|ruff check .| 输出 \texttt{All checks passed!}，E、F 两类规则全部通过。
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.92\textwidth]{q13_10_ruff_format.png}
+    \caption{ruff format 就地统一格式}
+    \label{fig:ms4-03a}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.92\textwidth]{q13_11_ruff_check.png}
+    \caption{ruff check 静态检查全部通过}
+    \label{fig:ms4-03b}
+\end{figure}
+\end{exercise}
+
+\begin{exercise}{用 pytest 运行测试并读懂报告头}
+\textbf{要求}：直接运行 \verb|pytest|，并观察报告里的 rootdir、configfile、testpaths 三个字段分别来自哪里。
+
+\textbf{操作命令}：
+\begin{lstlisting}
+cd q13
+pytest
+\end{lstlisting}
+
+\textbf{结果说明}：如图\ref{fig:ms4-04}所示，报告头给出 platform darwin —— Python 3.14.7、pytest-9.1.1；\verb|configfile: pyproject.toml| 说明配置来自上一个实例写进项目清单的内容，\verb|testpaths: tests| 说明收集范围被限定在 tests 目录，因此不需要在命令行上再传路径；随后 \texttt{collected 2 items} 收集到 2 个用例，\verb|tests/test_cli.py ..| 的两个点表示两个用例都通过，最后一行 \texttt{2 passed in 0.00s} 是本次运行的结果。
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.95\textwidth]{q13_12_pytest.png}
+    \caption{pytest 读取 pyproject.toml 配置并跑通两个用例}
+    \label{fig:ms4-04}
+\end{figure}
+\end{exercise}
+
+\begin{exercise}{用 chmod 赋予执行权限并读取脚本退出码}
+\textbf{要求}：把三条检查固化成 \verb|check.sh| 之后，给它执行权限，运行脚本，并用 \verb|echo $?| 读取返回码。
+
+\textbf{操作命令}：
+\begin{lstlisting}
+chmod +x check.sh
+./check.sh
+echo $?
+\end{lstlisting}
+
+\textbf{结果说明}：如图\ref{fig:ms4-05a}所示，\verb|chmod +x check.sh| 执行后没有任何输出、直接回到提示符，说明权限位已经加上；脚本首行的 \texttt{set -euo pipefail} 保证任一环节失败就立即以非零码退出。如图\ref{fig:ms4-05b}所示，\verb|./check.sh| 依次输出 \texttt{4 files already formatted}、\texttt{All checks passed!} 与 \texttt{2 passed in 0.00s}，三项检查全部通过，紧随其后的 \verb|echo $?| 打印 0，这个返回码可以直接被后续命令用来判断门禁是否通过。
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.85\textwidth]{q13_14_chmod.png}
+    \caption{chmod +x 给 check.sh 加上执行权限}
+    \label{fig:ms4-05a}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.55\textwidth]{q13_16_exitcode.png}
+    \caption{用 echo \$? 确认 check.sh 的返回码为 0}
+    \label{fig:ms4-05b}
+\end{figure}
+\end{exercise}
+
+\section{用 Make 描述构建链路}
+
+\begin{exercise}{用 Make 的依赖关系实现增量构建}
+\textbf{要求}：Makefile 把 \verb|data.csv| $\rightarrow$ \verb|stats.txt| $\rightarrow$ \verb|report.txt| 的依赖写清楚之后，观察首次构建、无改动构建、只改时间戳三种情况分别发生什么。
+
+\textbf{操作命令}：
+\begin{lstlisting}
+cd w4/q14
+make            # 首次：两个产物都不存在
+make            # 无改动
+touch data.csv  # 只更新最上游输入的时间戳，内容不变
+make            # 观察级联重建
+\end{lstlisting}
+
+\textbf{结果说明}：如图\ref{fig:ms4-06a}所示，第二次不带任何改动的 \verb|make| 直接提示 \texttt{make: Nothing to be done for `all'.}，因为 stats.txt 比 data.csv 与 stats.py 新、report.txt 又比它的三个依赖新，所有目标都是最新的，一条配方都没有执行；随后 \verb|touch data.csv| 只更新数据文件的时间戳。如图\ref{fig:ms4-06b}所示，再次 \verb|make| 时 make 发现 data.csv 比 stats.txt 新，于是重跑 \verb|python3 stats.py| 更新中间产物，又因为 report.txt 依赖 stats.txt，顺势重跑 \verb|python3 build_report.py| 更新最终产物——只改动最上游的输入，受影响的产物就按依赖顺序级联重建。
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.95\textwidth]{q14_15_touch.png}
+    \caption{无改动时 make 不做事，touch 之后才动最上游输入}
+    \label{fig:ms4-06a}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.95\textwidth]{q14_16_make_rebuild.png}
+    \caption{touch data.csv 后 make 级联重建两个产物}
+    \label{fig:ms4-06b}
+\end{figure}
+\end{exercise}
+
+\begin{exercise}{用 make clean 清理生成物}
+\textbf{要求}：把中间产物与最终产物删掉，只保留源文件与构建文件。
+
+\textbf{操作命令}：
+\begin{lstlisting}
+make clean
+ls
+\end{lstlisting}
+
+\textbf{结果说明}：如图\ref{fig:ms4-07a}所示，\verb|make clean| 先回显它执行的命令行 \texttt{rm -f stats.txt report.txt}，说明 clean 的配方只删这两个生成物，不会碰到源文件；如图\ref{fig:ms4-07b}所示，\verb|ls| 确认目录中只剩下 \verb|Makefile|、\verb|build_report.py|、\verb|data.csv|、\verb|report.md|、\verb|stats.py| 五个源文件与构建文件，中间产物与最终产物都被清理干净。
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.85\textwidth]{q14_17_make_clean.png}
+    \caption{make clean 执行 rm -f 只删除生成物}
+    \label{fig:ms4-07a}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.85\textwidth]{q14_18_ls_after_clean.png}
+    \caption{clean 之后目录中只剩源文件}
+    \label{fig:ms4-07b}
+\end{figure}
+\end{exercise}
+
+\section{本地服务与命令行数据加工}
+
+\begin{exercise}{后台启动本地 HTTP 服务并用 jobs 查看作业}
+\textbf{要求}：把当前目录变成一个本地 HTTP 服务，把这条命令放到后台运行，重定向日志，并用 \verb|jobs| 确认作业状态。
+
+\textbf{操作命令}：
+\begin{lstlisting}
+cd w4/q15
+python3 -m http.server 8000 > server.log 2>&1 &
+jobs
+\end{lstlisting}
+
+\textbf{结果说明}：如图\ref{fig:ms4-08}所示，命令末尾的 \verb|&| 让服务在后台运行，\verb|> server.log 2>&1| 把标准输出与标准错误一并重定向到 server.log，shell 随即打印作业号 36391；接着 \verb|jobs| 列出该作业仍处于运行状态，说明服务已在 8000 端口监听，\verb|packages.json| 可以经由 \url{http://127.0.0.1:8000/packages.json} 取到。要看服务运行期间的请求记录，直接查看 server.log 即可；服务用完后可用 \verb|kill %1| 结束这个后台作业。
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.92\textwidth]{q15_06_http_server.png}
+    \caption{后台启动本地 HTTP 服务并用 jobs 确认作业状态}
+    \label{fig:ms4-08}
+\end{figure}
+\end{exercise}
+
+\begin{exercise}{用 curl 取回数据、用 jq 过滤与排序}
+\textbf{要求}：从本地服务取回 JSON，先用 jq 统计记录条数，再按「status 为 active 且 downloads 不少于 100」过滤，并按下载量降序、名称升序排序。
+
+\textbf{操作命令}：
+\begin{lstlisting}
+curl -fsS http://127.0.0.1:8000/packages.json
+curl -fsS http://127.0.0.1:8000/packages.json | jq 'length'
+curl -fsS http://127.0.0.1:8000/packages.json |
+  jq -r '[.[] | select(.status == "active" and .downloads >= 100)]
+         | sort_by(-.downloads, .name)[]
+         | "\(.name) \(.version) \(.downloads)"'
+\end{lstlisting}
+
+\textbf{结果说明}：如图\ref{fig:ms4-09a}所示，终端里回显出的正是 packages.json 的原始内容；curl 的三个选项各有用意：\verb|-f| 让服务器返回 4xx/5xx 时以非零码退出而不是把错误页当成数据继续处理，\verb|-s| 关闭进度与统计信息，\verb|-S| 保证出错时仍然打印错误原因。如图\ref{fig:ms4-09b}所示，\verb|jq 'length'| 返回 5，说明这份 JSON 能被正确解析且是 5 条记录。如图\ref{fig:ms4-09c}所示，过滤与排序后的输出依次为 delta(0.9.0, 450)、gamma(1.5.1, 450)、alpha(1.2.0, 120)：status 为 inactive 的 beta 与 downloads 只有 80 的 epsilon 被筛掉；delta 与 gamma 下载量相同，按名称字母序 delta 在前。
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.95\textwidth]{截屏2026-09-14 12.55.56.png}
+    \caption{用 curl -fsS 从本地服务取回 JSON}
+    \label{fig:ms4-09a}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.55\textwidth]{q15_05_jq_length.png}
+    \caption{jq 'length' 统计记录条数}
+    \label{fig:ms4-09b}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.92\textwidth]{截屏2026-09-14 12.56.14.png}
+    \caption{jq 过滤 active 且下载量不少于 100 的记录并排序}
+    \label{fig:ms4-09c}
+\end{figure}
+\end{exercise}
+
+\section{打包交付与产物校验}
+
+\begin{exercise}{在虚拟环境中构建 wheel 并校验产物摘要}
+\textbf{要求}：在项目的虚拟环境里把源码构建成 wheel，查看 dist 目录，并对产物计算 SHA-256 摘要。
+
+\textbf{操作命令}（Makefile 中 build 目标的配方就是 \verb|python3 -m build --wheel|）：
+\begin{lstlisting}
+cd w4/q16
+source .venv/bin/activate
+make build
+ls dist
+shasum -a 256 dist/*.whl
+\end{lstlisting}
+
+\textbf{结果说明}：如图\ref{fig:ms4-10a}所示，提示符前缀出现 \texttt{(.venv)}，说明当前 shell 用的是项目虚拟环境里的解释器与构建工具；如图\ref{fig:ms4-10b}所示，构建最终输出 \texttt{Successfully built greetlab\_25020007076-0.1.0-py3-none-any.whl}，dist 目录下出现了该 wheel，\verb|shasum -a 256| 算出的摘要为 \texttt{c3e33ba5b23525ec6c0e38\allowbreak cbbb48d88c8c99f42fe14\allowbreak b5966b2093177595d8701}。反过来看，若当前环境里没有安装 build 工具，同一个 \verb|make build| 会以 \texttt{No module named build} 和 \texttt{*** [build] Error 1} 失败（见第一章图\ref{fig:q16-buildfail}），可见构建依赖同样需要被隔离在项目环境里，才谈得上可复现的交付。
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.95\textwidth]{截屏2026-09-14 13.34.31.png}
+    \caption{在项目虚拟环境中执行 make build}
+    \label{fig:ms4-10a}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \reportimage[width=0.95\textwidth]{截屏2026-09-14 13.34.44.png}
+    \caption{成功产出 wheel 并用 shasum -a 256 校验摘要}
+    \label{fig:ms4-10b}
+\end{figure}
+\end{exercise}
+
+\section{本章小结}
+
+本章的 10 个实例把第四周的内容拆成了四组可独立复现的最小操作。第一组是本地质量门禁：用 vim 写带断言的用例、在 pyproject.toml 里声明 ruff 与 pytest 的配置、用 \verb|ruff format| 与 \verb|ruff check| 统一风格并做静态检查、用 \verb|pytest| 跑测试、用 \verb|chmod +x| 让 \verb|check.sh| 可执行并通过退出码给出结论。第二组是构建自动化：把依赖写进 Makefile 之后，make 只在输入真正变新时才重跑受影响的配方，\verb|make clean| 则只清理生成物。第三组是本地服务与数据加工：\verb|http.server| 放到后台并用 \verb|jobs| 管理，\verb|curl -fsS| 保证「出错即失败、不静默失败」，jq 负责过滤与排序。第四组是交付：在虚拟环境里构建 wheel，并用 \verb|shasum -a 256| 把产物的身份固定下来，供别人核对。10 个实例都保留了命令与输出的截图，可以按本章命令逐条复现。
