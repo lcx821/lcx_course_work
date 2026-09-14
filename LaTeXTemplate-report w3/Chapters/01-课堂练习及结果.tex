@@ -5,231 +5,250 @@
 
 \subsection{实验内容}
 
-如图\ref{fig:w3目录}所示，在课程仓库中创建 w3 实验目录并进入，第三周的四个实验均在 w3 目录下完成。
+在课程仓库的 w3 目录下完成第三周的四个练习。如图\ref{fig:q09-cli}所示，在 q09 中创建 \verb|src/greetlab/__init__.py| 与 \verb|src/greetlab/cli.py|；cli.py 用 argparse 声明必填选项 \verb|--name|，在 \verb|main()| 中解析参数并打印问候语。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 10.45.13.png}
-    \caption{创建 w3 实验目录}
-    \label{fig:w3目录}
+    \includegraphics[width=0.85\textwidth]{截屏2026-09-14 10.27.07.png}
+    \caption{创建 src/greetlab 包与 cli.py}
+    \label{fig:q09-cli}
 \end{figure}
 
-由于本机没有预装课程要求的构建工具，需要先准备课程环境。如图\ref{fig:课程环境}所示，先检查 Python 版本（3.14.7），再使用 \verb|python3 -m venv| 命令创建课程虚拟环境 \verb|course_env|；如图\ref{fig:安装课程工具}所示，在 \verb|course_env| 中执行 \verb|pip install build pytest| 安装构建和测试工具，为后续构建 wheel 和运行测试做准备。
+如图\ref{fig:q09-toml}所示，编写 pyproject.toml：\verb|[project]| 段的 name 为 \texttt{greetlab-25020007076}（把题目模板中的"学号"替换为自己的学号），version 为 \texttt{0.1.0}；\verb|[project.scripts]| 段把命令行入口 \verb|sdt-greet| 指向 \verb|greetlab.cli| 的 main 函数；\verb|[build-system]| 段声明 setuptools 构建后端。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 10.53.22.png}
-    \caption{检查 Python 版本并创建课程虚拟环境 course\_env}
-    \label{fig:课程环境}
+    \includegraphics[width=0.85\textwidth]{截屏2026-09-14 10.28.58.png}
+    \caption{编写 pyproject.toml 声明包元数据与命令入口}
+    \label{fig:q09-toml}
 \end{figure}
 
+由于本机未预装构建工具，如图\ref{fig:q09-buildenv}所示，先创建虚拟环境 \verb|build_env| 并在其中执行 \verb|python -m pip install build|，成功安装 build 1.6.1 及其依赖 packaging、pyproject\_hooks；随后用 \verb|python -m build --version| 确认工具可用。
+
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 10.54.09.png}
-    \caption{在 course\_env 中安装 build 与 pytest}
-    \label{fig:安装课程工具}
+    \includegraphics[width=0.90\textwidth]{截屏2026-09-14 10.33.17.png}
+    \caption{在 build\_env 中安装 build 构建工具}
+    \label{fig:q09-buildenv}
 \end{figure}
 
-如图\ref{fig:创建greetlab包}所示，在 q09 中创建 \verb|src/greetlab/__init__.py|、cli.py 和 pyproject.toml。其中 \verb|[project]| 段的 name 为 \texttt{greetlab-25020007076}（把题目模板中的"学号"替换为自己的学号）、version 为 0.1.0；\verb|[project.scripts]| 段把命令行入口 \verb|sdt-greet| 指向 \verb|greetlab.cli| 的 main 函数。
+如图\ref{fig:q09-dist}所示，在已安装构建工具的 \verb|build_env| 中运行 \verb|python -m build|，构建过程依次完成 sdist 与 wheel，输出 \texttt{Successfully built greetlab\_25020007076-0.1.0.tar.gz and greetlab\_25020007076-0.1.0-py3-none-any.whl}；用 \verb|ls dist| 确认 dist 目录下同时生成了 \texttt{.tar.gz} 与 \texttt{.whl} 两个分发产物。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 10.55.55.png}
-    \caption{创建 cli.py 与 pyproject.toml}
-    \label{fig:创建greetlab包}
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 10.35.47.png}
+    \caption{运行 python -m build 生成 wheel 与 sdist 产物}
+    \label{fig:q09-dist}
 \end{figure}
 
-如图\ref{fig:构建wheel}所示，激活 \verb|course_env| 后运行 \verb|python -m build|，成功生成 \texttt{greetlab\_25020007076-0.1.0.tar.gz} 和 \texttt{greetlab\_25020007076-0.1.0-py3-none-any.whl} 两个分发产物。
+如图\ref{fig:q09-testenv}所示，退出 q09 目录后回到 w3，用 \verb|python3 -m venv q09_test_env| 新建一个干净虚拟环境，用于验证 wheel 能否脱离源码独立安装。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 10.56.57.png}
-    \caption{运行 python -m build 生成 wheel}
-    \label{fig:构建wheel}
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 10.36.33.png}
+    \caption{新建干净虚拟环境 q09\_test\_env}
+    \label{fig:q09-testenv}
 \end{figure}
 
-如图\ref{fig:干净环境安装}所示，先用 \verb|ls dist| 查看构建产物，再使用 \verb|python -m venv venv| 新建一个干净虚拟环境，最后用 \verb|venv/bin/pip install dist/greetlab_25020007076-0.1.0-py3-none-any.whl| 只从生成的 wheel 安装，输出 \texttt{Successfully installed greetlab-25020007076-0.1.0}，全程没有从镜像源下载安装该包。
+如图\ref{fig:q09-install}所示，激活 \verb|q09_test_env| 后执行 \verb|pip install| 安装 \path|q09/dist/greetlab_25020007076-0.1.0-py3-none-any.whl|，只从本地生成的 wheel 安装，输出 \texttt{Successfully installed greetlab-25020007076-0.1.0}，全程没有从镜像源下载该包。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 10.57.59.png}
-    \caption{新建干净虚拟环境并仅从 wheel 安装}
-    \label{fig:干净环境安装}
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 10.38.09.png}
+    \caption{在干净环境中仅从 wheel 安装}
+    \label{fig:q09-install}
 \end{figure}
 
-如图\ref{fig:sdt-greet运行}所示，切换到 q09 之外（w3 目录）运行 \verb|sdt-greet --name 25020007076|，输出 \texttt{Hello, 25020007076!}，说明 wheel 安装正确、命令行入口可用。
+如图\ref{fig:q09-piplist}所示，用 \verb|pip list| 查看该环境内全部包，除 greetlab-25020007076 0.1.0 外只有 pip 26.2.1 本身，说明这是一个未受源码与构建工具污染的干净环境。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 10.58.49.png}
-    \caption{在 q09 之外运行 sdt-greet}
-    \label{fig:sdt-greet运行}
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 10.38.34.png}
+    \caption{pip list 确认干净环境内仅装有 greetlab 与 pip}
+    \label{fig:q09-piplist}
+\end{figure}
+
+如图\ref{fig:q09-run}所示，切换到 q09 之外运行 \verb|sdt-greet --name 25020007076|，输出 \texttt{Hello, 25020007076!}，说明 wheel 安装正确、\verb|[project.scripts]| 声明的命令行入口可用。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 10.39.14.png}
+    \caption{在 q09 之外运行 sdt-greet 验证入口命令}
+    \label{fig:q09-run}
+\end{figure}
+
+如图\ref{fig:q09-commit}所示，用 \verb|git add .| 与 \verb|git commit -m "完成了 q09"| 提交，提交 \texttt{7b3fe5b} 共变更 10 个文件、新增 30 行，包含 cli.py、pyproject.toml 及构建产物。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{截屏2026-09-14 10.45.46.png}
+    \caption{第九题的 git 提交记录}
+    \label{fig:q09-commit}
 \end{figure}
 
 \subsection{实验结果}
 
-第九题完成了从源码构建 wheel、在干净虚拟环境中仅从 wheel 安装、并在 q09 之外运行命令行工具验证输出的完整流程，验证了 Python 打包（Packaging）与安装（Shipping）的整条链路。
-
-% TODO: 完成 w3 目录的 git 提交与推送后，将 commit/push 记录截图放入 images/ 并补充如下内容
-% 第九题的 github 的 commit 记录和 push 记录如图\ref{fig:github记录Q9}所示。
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=0.8\textwidth]{github记录Q9.png}
-%     \caption{github记录Q9}
-%     \label{fig:github记录Q9}
-% \end{figure}
+第九题完成了「源码 $\rightarrow$ 构建 sdist 与 wheel $\rightarrow$ 干净虚拟环境仅从 wheel 安装 $\rightarrow$ 在包目录之外运行命令行入口」的完整链路：\texttt{python -m build} 成功产出 \path|greetlab_25020007076-0.1.0.tar.gz| 与 \path|greetlab_25020007076-0.1.0-py3-none-any.whl|，新建的 \verb|q09_test_env| 中仅有 greetlab 与 pip 两个包，\verb|sdt-greet --name 25020007076| 正确输出 \texttt{Hello, 25020007076!}，验证了 Python 打包与分发的整条链路。
 
 \section{第 10 题 让编程智能体进入可验证的修复循环}
 
 \subsection{实验内容}
 
-如图\ref{fig:复制q10}所示，使用 rsync 将 q09 复制为 q10（用 \verb|--exclude| 排除 venv、build 等构建产物），并在 q10 中创建 test\_cli.py：当 name 只含空白字符时，main 应以 \texttt{SystemExit(2)} 结束。
+复用第 9 题的 greetlab 包，如图\ref{fig:q10-copy}所示，用 \verb|cp -R q09 q10| 把 q09 复制为 q10 并查看其中的文件列表，随后在 q10 中补一个「失败测试」：当 \verb|--name| 只含空白字符时，main 应以 \texttt{SystemExit(2)} 结束。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 11.00.50.png}
-    \caption{复制 q09 为 q10 并创建 test\_cli.py}
-    \label{fig:复制q10}
+    \includegraphics[width=0.85\textwidth]{截屏2026-09-14 10.48.05.png}
+    \caption{复制 q09 为 q10}
+    \label{fig:q10-copy}
 \end{figure}
 
-如图\ref{fig:测试先失败}所示，先运行 \verb|PYTHONPATH=src python -m pytest -v| 确认测试失败：报错 \texttt{TypeError: main() takes 0 positional arguments but 1 was given}。原因是当前 main 函数既不接收参数、也不会校验空白姓名，与测试期望不符，符合"先运行测试确认失败"的要求。
+如图\ref{fig:q10-pytestenv}所示，本机基础 Python 环境中没有 pytest，\verb|python3 -m pytest| 直接报 \texttt{No module named pytest}；因此新建虚拟环境 \verb|test_env|，在其中安装 pytest 9.1.1 及其依赖 iniconfig、pluggy、packaging、pygments。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 11.06.43.png}
+    \includegraphics[width=0.80\textwidth]{截屏2026-09-14 10.49.33.png}
+    \caption{创建 test\_env 并安装 pytest}
+    \label{fig:q10-pytestenv}
+\end{figure}
+
+如图\ref{fig:q10-testfile}所示，进入 \verb|tests| 目录并用编辑器创建测试文件 \verb|test_cli.py|。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 10.50.39.png}
+    \caption{创建测试文件 tests/test\_cli.py}
+    \label{fig:q10-testfile}
+\end{figure}
+
+测试内容为：用 \verb|monkeypatch| 把 \texttt{sys.argv} 替换为 \verb|["sdt-greet", "--name", "   "]|，断言 \verb|main()| 抛出 \texttt{SystemExit} 且退出码为 2。如图\ref{fig:q10-fail}所示，先运行 \verb|python3 -m pytest| 确认测试失败：报错 \texttt{Failed: DID NOT RAISE SystemExit}，并捕获到标准输出为 \texttt{Hello,   !}，即空姓名仍被当作正常输入输出问候语并以 0 退出，与期望不符，符合"先运行测试确认失败"的要求。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 11.16.13.png}
     \caption{先运行测试确认失败}
-    \label{fig:测试先失败}
+    \label{fig:q10-fail}
 \end{figure}
 
-接下来向编程智能体说明目标（name 为纯空白时 main 应以 \texttt{SystemExit(2)} 结束）、约束（只修改实现、不修改测试）和测试命令，要求它修改实现并运行测试。如图\ref{fig:智能体修复}所示，智能体把 main 改为接收可选 argv 参数，并在 parse 后校验 \texttt{a.name.strip()}，空白时调用 p.error 使程序以退出码 2 终止；修改后再次运行测试，输出 \texttt{1 passed}。
+接下来向编程智能体说明目标（\verb|--name| 只含空白字符时以 \texttt{SystemExit(2)} 结束）、约束（只修改实现、不修改测试）和测试命令，要求它修改实现并运行测试。如图\ref{fig:q10-fix}所示，智能体用 \verb|str.strip()| 判断姓名是否只含空白字符，命中时调用 \verb|p.error()|——argparse 的 \verb|error()| 本身即以状态码 2 退出，正好满足 \texttt{SystemExit(2)} 的要求，无需手写 \verb|sys.exit(2)|；修改后测试通过，并另外手工核对了 \verb|--name Alice|、\verb|--name " Bob "|、\verb|--name " \t "| 三种输入，确认首尾有空白但中间有内容的输入保持原有行为、不做额外 strip。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 11.07.39.png}
-    \caption{智能体修改 cli.py 后测试通过}
-    \label{fig:智能体修复}
+    \includegraphics[width=0.62\textwidth]{截屏2026-09-14 11.19.34.png}
+    \caption{智能体说明修复思路与验证结果}
+    \label{fig:q10-fix}
 \end{figure}
 
-如图\ref{fig:diff人工检查}所示，人工检查 diff：\verb|diff ../q09/src/greetlab/cli.py src/greetlab/cli.py| 显示只有 main 函数签名与空白校验两处预期改动；pyproject.toml 和 \_\_init\_\_.py 与 q09 完全一致，说明智能体没有引入无关修改。
+如图\ref{fig:q10-pass}所示，修改后再次运行 \verb|python3 -m pytest|，输出 \texttt{1 passed in 0.00s}，测试通过。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 11.08.29.png}
-    \caption{人工检查 diff 确认无无关修改}
-    \label{fig:diff人工检查}
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 11.20.25.png}
+    \caption{再次运行测试全部通过}
+    \label{fig:q10-pass}
 \end{figure}
 
-如图\ref{fig:再次测试与ai_log}所示，再次运行测试全部通过；并用不超过 5 行的 ai\_log.md 记录核心提示、智能体改动和人工验证三部分内容。
+如图\ref{fig:q10-diff}所示，人工检查 diff：\verb|diff -u ../q09/src/greetlab/cli.py src/greetlab/cli.py| 显示只有 \verb|main()| 中新增的空白校验三行（\verb|if not a.name.strip():| 与 \verb|p.error|，后者的提示文本为 \texttt{--name must not be blank}）属于预期改动，没有无关修改。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 11.09.41.png}
-    \caption{再次运行测试并记录 ai\_log.md}
-    \label{fig:再次测试与ai_log}
+    \includegraphics[width=0.90\textwidth]{截屏2026-09-14 11.21.41.png}
+    \caption{人工检查 diff 确认仅含预期改动}
+    \label{fig:q10-diff}
+\end{figure}
+
+如图\ref{fig:q10-log}所示，另用不超过 5 行的 \verb|ai_log.md| 记录核心提示、智能体改动、智能体验证和人工验证四部分内容，随后提交：提交 \texttt{558417a} 变更 13 个文件、新增 51 行。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{截屏2026-09-14 11.24.19.png}
+    \caption{记录 ai\_log.md 并提交第十题}
+    \label{fig:q10-log}
 \end{figure}
 
 \subsection{实验结果}
 
-第十题完成了"测试先行失败、智能体修复、人工检查 diff、再次验证"的可验证修复循环：测试从 \texttt{1 failed} 变为 \texttt{1 passed}，diff 仅含预期改动，ai\_log.md 用 4 行记录完整闭环。
-
-% TODO: 完成 w3 目录的 git 提交与推送后，将 commit/push 记录截图放入 images/ 并补充如下内容
-% 第十题的 github 的 commit 记录和 push 记录如图\ref{fig:github记录Q10}所示。
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=0.8\textwidth]{github记录Q10.png}
-%     \caption{github记录Q10}
-%     \label{fig:github记录Q10}
-% \end{figure}
+第十题完成了「测试先行失败、智能体修复、人工检查 diff、再次验证」的可验证修复循环：测试从 \texttt{1 failed}（\texttt{DID NOT RAISE SystemExit}）变为 \texttt{1 passed}；\verb|ai_log.md| 用 4 行记录完整闭环；diff 确认实现层仅为新增的空白姓名校验，测试文件未被改动，符合"只修改实现、不修改测试"的约束。
 
 \section{第 11 题 把"无法处理"的协作材料改成可执行信息}
 
 \subsection{实验内容}
 
-围绕"空姓名仍输出问候语"这一缺陷，改写三段质量较差的协作材料。如图\ref{fig:communication初版}所示，在 q11 的 communication.md 中重写三部分内容：Issue 包含环境、复现命令、期望结果和实际结果，未知信息写"待确认"；提交信息标题使用祈使语气，正文说明问题和解决方案；评审意见指出具体行为、风险和建议动作，并标注 Blocking、Suggestion 或 Nit。
+围绕"空姓名仍输出问候语"这一缺陷，改写三段质量较差的协作材料。如图\ref{fig:q11-origin}所示，原始材料存在明显问题：Issue 只写 \texttt{Windows 上运行不了，尽快修复。}，提交信息为 \texttt{fix bug}，评审意见为 \texttt{这里写得好，重写。}，均无法据此定位与执行。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 11.11.21.png}
-    \caption{重写 communication.md 并核验字数}
-    \label{fig:communication初版}
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 11.28.50.png}
+    \caption{改写前的原始协作材料}
+    \label{fig:q11-origin}
 \end{figure}
 
-经 \verb|wc -m| 核验，初版全文为 403 字，超出 400 字限制。如图\ref{fig:communication精简}所示，精简冗余表述后全文为 384 字，满足"全文控制在400字以内"的要求，且保持专业、简洁。
+如图\ref{fig:q11-rewrite}所示，在 \verb|communication.md| 中重写三部分内容：Issue 补齐环境（Windows，具体版本待确认）、复现命令（\verb|sdt-greet --name " "|）、期望结果（空姓名不应输出问候语并应返回非 0 退出码）、实际结果（仍输出 \texttt{Hello,   !} 并以 0 退出）和影响，未知信息标注"待确认"；提交信息标题改用祈使语气 \texttt{Reject empty names}，正文说明问题与解决方案；评审意见指出具体行为、风险和建议动作，并标注为 \texttt{Blocking}。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 11.11.58.png}
-    \caption{精简后全文 384 字}
-    \label{fig:communication精简}
+    \includegraphics[width=0.80\textwidth]{截屏2026-09-14 11.30.13.png}
+    \caption{重写后的 communication.md}
+    \label{fig:q11-rewrite}
+\end{figure}
+
+如图\ref{fig:q11-cat}所示，用 \verb|cat communication.md| 核验最终内容，全文分为 Issue、Commit Message、Review 三节，未包含任何无法执行的空泛表述。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{截屏2026-09-14 11.30.43.png}
+    \caption{核验 communication.md 最终内容}
+    \label{fig:q11-cat}
+\end{figure}
+
+经 \verb|wc -m| 核验，全文为 352 字，满足"全文控制在 400 字以内"的要求。如图\ref{fig:q11-commit}所示，提交 \texttt{6b68cfd} 变更 1 个文件、新增 17 行。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 11.31.21.png}
+    \caption{第十一题的 git 提交记录}
+    \label{fig:q11-commit}
 \end{figure}
 
 \subsection{实验结果}
 
-第十一题最终 communication.md 全文 384 字（$\leq$400）：Issue 部分补全了环境、复现命令、期望结果和实际结果，并将"是否仅 Windows 复现"标注为待确认；提交信息以 \texttt{fix: 空白姓名改为报错退出} 为祈使式标题，正文说明了问题与解决方案；评审意见包含 \texttt{Blocking}（未校验导致误判成功）、\texttt{Suggestion}（补充合法输入提示）和 \texttt{Nit}（校验逻辑可独立成函数便于单测）。
-
-% TODO: 完成 w3 目录的 git 提交与推送后，将 commit/push 记录截图放入 images/ 并补充如下内容
-% 第十一题的 github 的 commit 记录和 push 记录如图\ref{fig:github记录Q11}所示。
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=0.8\textwidth]{github记录Q11.png}
-%     \caption{github记录Q11}
-%     \label{fig:github记录Q11}
-% \end{figure}
+第十一题把三段"无法处理"的协作材料改写成了可执行信息，最终 \verb|communication.md| 全文 352 字（$\leq$400）：Issue 补齐环境、复现命令、期望结果、实际结果与影响，并把"Windows 具体版本"标注为待确认；提交信息以祈使式标题 \texttt{Reject empty names} 开头，正文说明问题与解决方案；评审意见以 \texttt{Blocking} 标注空姓名仍被视为有效输入的风险，并给出增加校验与补充测试用例的建议。
 
 \section{第 12 题 修复一个可复现的线性回归训练循环}
 
 \subsection{实验内容}
 
-如图\ref{fig:安装torch}所示，在 \verb|course_env| 中执行 \verb|pip install torch| 安装 PyTorch（torch 2.14.0）。
+如图\ref{fig:q12-code}所示，将给定代码保存为 \verb|q12/train.py| 并补全两处 TODO：在训练循环中依次调用 \verb|opt.zero_grad()| 清空梯度、\verb|loss.backward()| 反向传播、\verb|opt.step()| 更新参数；训练结束后调用 \verb|model.eval()| 进入评估模式，并在 \verb|torch.no_grad()| 中计算最终损失、打印 weight 与 bias。训练使用 \verb|torch.manual_seed(20260907)| 固定随机种子，输入为 $x\in[-1,1]$ 上的 101 个点，目标关系为 $y=3x-1$，优化器为学习率 0.1 的 SGD，共训练 200 步。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 11.13.25.png}
-    \caption{安装 PyTorch}
-    \label{fig:安装torch}
+    \includegraphics[width=0.55\textwidth]{截屏2026-09-14 11.35.50.png}
+    \caption{补全 TODO 后的 q12/train.py}
+    \label{fig:q12-code}
 \end{figure}
 
-如图\ref{fig:创建train}所示，创建 q12/train.py，在训练循环中补全 TODO：依次调用 \verb|opt.zero_grad()| 清空梯度、\verb|loss.backward()| 反向传播、\verb|opt.step()| 更新参数；训练结束后调用 \verb|model.eval()| 进入评估模式，并在 \verb|torch.no_grad()| 中计算并打印最终损失、weight 和 bias。
+如图\ref{fig:q12-run}所示，运行 \verb|python train.py|。运行时 torch 提示 \texttt{No module named 'numpy'} 的 UserWarning，但该警告只影响 NumPy 互转，不影响 CPU 上的张量运算与训练，程序正常完成并输出 \texttt{Final loss: 2.3923129102709773e-12}、\texttt{Weight: 2.99999737739563}、\texttt{Bias: -0.9999998807907104}。最终损失远小于题目要求的 0.001，weight 收敛到约 3、bias 收敛到约 $-1$，且全程未直接把 weight 和 bias 赋值为 3 和 $-1$。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 11.14.57.png}
-    \caption{创建 train.py 并补全 TODO 后运行}
-    \label{fig:创建train}
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 11.36.38.png}
+    \caption{运行 train.py 的训练结果}
+    \label{fig:q12-run}
 \end{figure}
 
-首次运行时 torch 提示缺少 numpy；如图\ref{fig:安装numpy重跑}所示，安装 numpy 后重新运行，输出 \texttt{final loss: 2.3923129102709773e-12}、\texttt{weight: 2.99999737739563}、\texttt{bias: -0.9999998807907104}。最终损失远小于题目要求的 0.001，weight 收敛到约 3、bias 收敛到约 $-1$，且全程没有直接把 weight 和 bias 赋值为 3 和 $-1$。
+如图\ref{fig:q12-commit}所示，提交 \texttt{bfca7fa} 变更 1 个文件、新增 37 行，即补全后的 \verb|train.py|。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 11.16.06.png}
-    \caption{安装 numpy 后重新运行 train.py}
-    \label{fig:安装numpy重跑}
-\end{figure}
-
-如图\ref{fig:目录核验}所示，最后依次查看各实验目录的文件清单，确认 q09--q12 的实验产物完整。
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{截屏2026-09-09 11.17.59.png}
-    \caption{核验实验目录文件清单}
-    \label{fig:目录核验}
+    \includegraphics[width=0.95\textwidth]{截屏2026-09-14 11.37.49.png}
+    \caption{第十二题的 git 提交记录}
+    \label{fig:q12-commit}
 \end{figure}
 
 \subsection{实验结果}
 
-第十二题通过补全训练循环（zero\_grad、backward、step）和评估阶段的 no\_grad 计算，完成了 PyTorch CPU 线性回归训练：最终损失 $2.39\times10^{-12}<0.001$，weight 收敛至 $2.999997\approx 3$，bias 收敛至 $-0.9999999\approx -1$，训练成功。
-
-% TODO: 完成 w3 目录的 git 提交与推送后，将 commit/push 记录截图放入 images/ 并补充如下内容
-% 第十二题的 github 的 commit 记录和 push 记录如图\ref{fig:github记录Q12}所示。
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=0.8\textwidth]{github记录Q12.png}
-%     \caption{github记录Q12}
-%     \label{fig:github记录Q12}
-% \end{figure}
+第十二题通过补全训练循环（zero\_grad、backward、step）和评估阶段的 no\_grad 计算，完成了一次 PyTorch CPU 线性回归训练：最终损失 $2.39\times10^{-12}<0.001$，weight 收敛至 $2.999997\approx 3$，bias 收敛至 $-0.9999999\approx -1$，训练成功。运行时的 NumPy 缺失警告不影响计算结果。
 
 \section{Github仓库地址}
 
 本次课程的报告、练习、代码等，均已上传至个人github仓库。\\Github仓库地址：\url{https://github.com/lcx821/lcx_course_work}
-

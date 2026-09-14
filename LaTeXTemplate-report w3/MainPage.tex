@@ -2,6 +2,13 @@
 \documentclass[zh]{ThesisTemplate}
 \usepackage{graphicx}
 \graphicspath{{images/}}
+\newcommand{\reportimage}[2][]{%
+    \IfFileExists{images/#2}{%
+        \includegraphics[#1]{#2}%
+    }{%
+        \fbox{\rule{0pt}{0.18\textheight}\parbox[c][0.18\textheight][c]{0.9\textwidth}{\centering Missing image: #2}}%
+    }%
+}
 \usepackage{ctex}
 \usepackage{float}
 \usepackage{listings}
@@ -11,6 +18,9 @@
 \usepackage{fancyhdr}
 \usepackage{enumitem}
 \usepackage{amsmath}
+
+% 允许段落额外伸展，避免长命令/路径溢出右边距
+\emergencystretch=2em
 
 % 代码样式
 \lstset{
